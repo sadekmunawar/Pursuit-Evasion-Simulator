@@ -7,29 +7,30 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+
+
 @SuppressWarnings("serial")
-public class Simulation extends JPanel {
+public class SimulationV2 extends JPanel {
     
     private JLabel status; // Current status text
     
     // constants
-    public static final int COURT_WIDTH = 792;
-    public static final int COURT_HEIGHT = 540;
+    public static final int COURT_WIDTH = 800;
+    public static final int COURT_HEIGHT = 550;
     
     // Update interval for timer, in milliseconds
     public static final int INTERVAL = 10;
     
     private int cols = COURT_WIDTH / 100;
     private int rows = COURT_HEIGHT / 100;
-    
-    private Obstacles[] obs;
-    
+        
     private List<Seeker> seekers;
     private List<Targets> targets;
     
@@ -38,6 +39,13 @@ public class Simulation extends JPanel {
     private int time;
     
     private int targetsFound;
+    
+    private HashSet<Roads> paths = new HashSet<Roads>();
+    private HashSet<Integer> pathIDs = new HashSet<Integer>();
+    
+    private HashSet<Obstacles> obs = new HashSet<Obstacles>();
+
+    
     
     private HashSet<Integer> targetsDiscovered = new HashSet<Integer>();
     
@@ -49,38 +57,68 @@ public class Simulation extends JPanel {
     
     
     
-    public Simulation(JLabel status) {
+    public SimulationV2(JLabel status) {
         
         
-        this.obs = new Obstacles[(COURT_WIDTH * COURT_HEIGHT) / 2500];
-        
-        int x = 20;
-        int y = 20;
-        
-        for (int i = 0; i < this.obs.length; i++) {
-            double r = Math.random();
-            if (r < 0.55) {
-                obs[i] = new Obstacles(x, y, 15, 15, COURT_WIDTH, COURT_HEIGHT, Color.RED, false);
-            }
-            
-            if ((x + 75) < COURT_WIDTH) {
-                x += 60;
-            } else if ((y + 75) < COURT_HEIGHT) {
-                y += 60;
-                x = 20;
-            } 
-        }
-        
+      
         
         setBorder(BorderFactory.createLineBorder(Color.BLACK));
         
-        
-     /*   Timer timer = new Timer(INTERVAL, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                tick();
-            }
-        });
-        timer.start(); */
+		paths = new HashSet<Roads>();
+		for(int i = -55; i < 54; i++) {
+		//	if (Math.random() < 0.75) {
+			paths.add(new Roads(i, 7, 9));
+			pathIDs.add(i);
+		//	}
+		}
+		
+		for (int i = 1; i < 49; i++) {
+			
+			int col = i % 8;
+			int row = i / 8;
+			
+			int offset = 10;
+			int offset2 = 30;
+			if (row == 0 || col == 0) {
+				offset = 20;
+				offset2 = 15;
+			}
+			
+			
+			if (i % 6 != 0) {
+				if (i % 3 == 0) {
+					this.obs.add(new Obstacles((col * 100) + offset, (row * 90) + offset, 20, 15, COURT_WIDTH, COURT_HEIGHT, Color.RED, true));
+					
+					this.obs.add(new Obstacles((col * 100) + offset + offset2, (row * 90) + offset + offset2, 20 , 10, COURT_WIDTH, COURT_HEIGHT, Color.RED, false));
+				} else if (i % 4 == 0) {
+					this.obs.add(new Obstacles((col * 100) + offset, (row * 90) + offset, 15, 15, COURT_WIDTH, COURT_HEIGHT, Color.RED, false));
+					
+					this.obs.add(new Obstacles((col * 100) + offset + offset2, (row * 90) + offset + offset2, 10 , 20, COURT_WIDTH, COURT_HEIGHT, Color.RED, false));
+					
+					if (row != 0) {
+					this.obs.add(new Obstacles((col * 100) + offset + 30, (row * 90), 15, 20, COURT_WIDTH, COURT_HEIGHT, Color.RED, true));
+					}
+				} else if (i % 2 == 0) {
+					this.obs.add(new Obstacles((col * 100) + offset, (row * 90) + offset, 10 , 20, COURT_WIDTH, COURT_HEIGHT, Color.RED, false));
+					
+					this.obs.add(new Obstacles((col * 100) + offset + offset2, (row * 90) + offset + offset2, 15, 15, COURT_WIDTH, COURT_HEIGHT, Color.RED, false));
+				} else {
+					this.obs.add(new Obstacles((col * 100) + offset, (row * 90) + offset, 20 , 10, COURT_WIDTH, COURT_HEIGHT, Color.RED, false));
+					
+					this.obs.add(new Obstacles((col * 100) + offset + offset2, (row * 90) + offset + offset2, 20, 15, COURT_WIDTH, COURT_HEIGHT, Color.RED, true));
+				}
+			}
+			
+		//	if (i % 3 == 0) {
+				
+		//	} else if (i % 4 == 0) {
+				
+		//	} else if (i % 2 == 0) {
+				
+		//	} else {
+				
+		//	}
+		}
         
         setFocusable(true);
         String m = "Time " + this.time + " ---------------- " + "Targets Found: 0";
@@ -107,12 +145,12 @@ public class Simulation extends JPanel {
         
         this.seekers = new LinkedList<Seeker>();
         
-        this.seekers.add(new Seeker(1, -1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK));
-        this.seekers.add(new Seeker(-1, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK));
+        this.seekers.add(new Seeker(0, -1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK));
+        this.seekers.add(new Seeker(1, 0, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK));
         
         this.targets = new LinkedList<Targets>();
-        this.targets.add(new Targets(-1, 1, 350, 350, 5, 5, COURT_WIDTH, COURT_HEIGHT, 1));
-        this.targets.add(new Targets(1, -1, 350, 200, 5, 5, COURT_WIDTH, COURT_HEIGHT, 2));
+        this.targets.add(new Targets(-1, 0, 485, 165, 5, 5, COURT_WIDTH, COURT_HEIGHT, 1));
+        this.targets.add(new Targets(0, -1, 685, 75, 5, 5, COURT_WIDTH, COURT_HEIGHT, 2));
     }
     
     
@@ -123,27 +161,31 @@ public class Simulation extends JPanel {
             
             
         for (Targets t: this.targets) {
+        	
+            
+            
             t.move();
             t.bounce(t.hitWall());
-            
-            for (int i = 0; i < this.obs.length; i++) {
-                if (obs[i] != null) {
-                    Directions d = t.hitObj(obs[i]);
-                    if (d != null) {
-                        t.ObsNav(d);
-                    }
 
-                }
-            }
+            Coordinate c = getCoordinate(t.getPx(), t.getPy());
             
+            if (c != null) {
+            	t.go(getARandomDirection(c));
+            }
             
         }
         
         for (Seeker s: this.seekers) {
-        	
+            
             s.move();
             s.bounce(s.hitWall());
             s.justExplored(getAreaNum(s.getPx(), s.getPy()));
+            
+            Coordinate c = getCoordinate(s.getPx(), s.getPy());
+            
+            if (c != null) {
+            	s.go(getARandomDirection(c));
+            }
             
             for (Targets t: this.targets) {
                 if (s.distanceTo(t) < 25) {
@@ -163,21 +205,14 @@ public class Simulation extends JPanel {
                 }
             }  */
             
-            for (Seeker r: this.seekers) {
+        /*    for (Seeker r: this.seekers) {
                 if (!s.equals(r)) {
                     // communication in range
                     if (s.distanceTo(r) < 50) {
                         
                         // check of obstacles 
                         boolean obsInPath = false;
-                        for (int i = 0; i < this.obs.length; i++) {
-                            if (this.obs[i] != null) {
-                                if (inPath(s.getPx(), s.getPy(), r.getPx(), r.getPy(), this.obs[i].getPx(), this.obs[i].getPy())) {
-                                    obsInPath = true;
-                                    break;
-                                }
-                            }
-                        }
+
                         
                         // if no obstacles in the path
                         if (!obsInPath) {
@@ -264,7 +299,7 @@ public class Simulation extends JPanel {
                         // seeker makes decision based on the new info
                     }
                 }
-            }
+            } */
             String m = "Time " + this.time + " ---------------- " + "Targets Found: " + this.targetsDiscovered.size();
             
             status.setText(m);
@@ -278,21 +313,14 @@ public class Simulation extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         
-        for (int i = 1; i < COURT_WIDTH / 100; i++) {
-            g.setColor(Color.GREEN);
-            g.fillRect(i * 100, 0, COURT_WIDTH / 50, COURT_HEIGHT);
+        for(Roads r: this.paths) {
+        //	if (Math.random() < 0.90) {
+        		r.draw(g);
+        	//}
         }
         
-        for (int i = 1; i < COURT_HEIGHT / 100; i++) {
-            g.setColor(Color.GREEN);
-            g.fillRect(0, i * 100, COURT_WIDTH, COURT_HEIGHT / 50);
-        }
-        
-        for (int i = 0; i < this.obs.length; i++) {
-
-            if (obs[i] != null) {
-                obs[i].draw(g);
-            }
+        for (Obstacles o: this.obs) {
+        	o.draw(g);
         }
         
         for (Seeker s: this.seekers) {
@@ -367,6 +395,48 @@ public class Simulation extends JPanel {
         
     }
     
+    private Directions getARandomDirection(Coordinate c) {
+    	LinkedList<Directions> l =  new LinkedList<Directions>();
+    	if (this.pathIDs.contains(Roads.getNorth(c))) {
+    		l.add(Directions.N);
+    	}
+    	if (this.pathIDs.contains(Roads.getSouth(c))) {
+    		l.add(Directions.S);
+    	}
+    	if (this.pathIDs.contains(Roads.getWest(c))) {
+    		l.add(Directions.W);
+    	}
+    	if (this.pathIDs.contains(Roads.getEast(c))) {
+    		l.add(Directions.E);
+    	}
+    	int randomNum = ThreadLocalRandom.current().nextInt(0, l.size());
+    	
+    	return l.get(randomNum);
+    }
+    
+    private Coordinate getCoordinate(int pX, int pY) {
+		int x1 = (int)Math.round((double)pX / 100.0);
+		int y1 = (int)Math.round((double)pY / 90.0);
+		
+		if (pX <= 12) {
+			x1 = 0;
+		}
+		
+		if (pY <= 12) {
+			y1 = 0;
+		}
+		
+		Coordinate c = new Coordinate(x1, y1);
+		
+		if (pX >= (c.getPx() - 0) && pX <= (c.getPx() + 0)) {
+			if (pY >= (c.getPy() - 0) && pY <= (c.getPy() + 0)) {
+				return c;
+			}
+		} 
+		
+		return null;
+		
+	}
     
     @Override
     public Dimension getPreferredSize() {

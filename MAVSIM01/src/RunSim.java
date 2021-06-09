@@ -14,7 +14,7 @@ public class RunSim implements Runnable {
     @Override
     public void run() {
         final JFrame frame = new JFrame("TOP LEVEL FRAME");
-        frame.setLocation(300, 300);
+        frame.setLocation(250, 25);
 
         // Status panel
         final JPanel status_panel = new JPanel();
@@ -22,12 +22,30 @@ public class RunSim implements Runnable {
         final JLabel status = new JLabel("Running...");
         status_panel.add(status);
         
-        final Simulation sim = new Simulation(status);
-        frame.add(sim, BorderLayout.CENTER);
-
+        
+        final SimSettings set = new SimSettings();
+        frame.add(set, BorderLayout.CENTER);
+        
         // Reset button
         final JPanel control_panel = new JPanel();
         frame.add(control_panel, BorderLayout.NORTH);
+        
+        final SimulationV2 sim = new SimulationV2(status);
+        
+        // listener to the reset button
+        final JButton start = new JButton("Start");
+        start.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                frame.remove(set);
+                frame.add(sim, BorderLayout.CENTER);
+                sim.reset();
+            }
+        });
+        control_panel.add(start);
+        
+    //    frame.add(sim, BorderLayout.CENTER);
+
+
 
         // listener to the reset button
         final JButton reset = new JButton("Reset");
@@ -44,7 +62,7 @@ public class RunSim implements Runnable {
         frame.setVisible(true);
 
         // Start game
-        sim.reset();
+        //sim.reset();
     }
     
     public static void main(String[] args) {

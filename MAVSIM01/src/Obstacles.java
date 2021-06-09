@@ -9,7 +9,8 @@ public class Obstacles extends Robot {
     private int wd;
     private int ht;
 
-    public Obstacles(int px, int py, int width, int height, int courtWidth, int courtHeight, Color color) {
+    private boolean isOval;
+    public Obstacles(int px, int py, int width, int height, int courtWidth, int courtHeight, Color color, boolean isOval) {
         super(0, 0, px, py, width, height, courtWidth, courtHeight);
         
         this.px = px;
@@ -18,13 +19,18 @@ public class Obstacles extends Robot {
         this.ht = height;
         
         this.color = color;
-        // TODO Auto-generated constructor stub
+        this.isOval = isOval;
     }
 
     @Override
     public void draw(Graphics g) {
         g.setColor(this.color);
-        g.fillRect(this.px, this.py, this.wd, this.ht);
+    	if (this.isOval) {
+    		g.fillOval(this.px, this.py, this.wd, this.ht);
+    	} else {
+    		 g.fillRect(this.px, this.py, this.wd, this.ht);
+    	}
+       
     }
 
 }

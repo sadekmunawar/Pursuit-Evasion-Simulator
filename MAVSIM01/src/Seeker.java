@@ -8,9 +8,11 @@ public class Seeker extends Robot {
     
     private HashSet<Integer> explored = new HashSet<Integer>();
     private HashSet<Integer> targetFound = new HashSet<Integer>();
+    
+    private boolean inCommunication;
 
     public Seeker(int vx, int vy, int width, int height, int courtWidth, int courtHeight, Color color) {
-        super(vx, vy, courtWidth / 2, courtHeight / 2, width, height, courtWidth, courtHeight);
+        super(vx, vy, 285, 75, width, height, courtWidth, courtHeight);
         // TODO Auto-generated constructor stub
         
         this.color = color;
@@ -40,7 +42,7 @@ public class Seeker extends Robot {
             break;
         default:
             break;
-    }
+        }
            
     }
     
@@ -70,6 +72,18 @@ public class Seeker extends Robot {
             
         }
         
+    }
+    
+    public boolean isCommunicating() {
+    	return this.inCommunication;
+    }
+    
+    public void beginCommunication() {
+    	this.inCommunication = true;
+    }
+    
+    public void endCommunication() {
+    	this.inCommunication = false;
     }
     
     public void justExplored(int a) {
