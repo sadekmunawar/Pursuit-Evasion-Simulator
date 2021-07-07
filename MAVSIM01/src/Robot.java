@@ -239,6 +239,23 @@ public abstract class Robot {
     }
     
     public Directions getCurrDirection() {
+    	
+    	if (this.vx > 0 && this.vy == 0) {
+    		return Directions.E;
+    	}
+    	
+    	if (this.vx < 0 && this.vy == 0) {
+    		return Directions.W;
+    	}
+    	
+    	if (this.vy > 0 && this.vx == 0) {
+    		return Directions.S;
+    	}
+    	
+    	if (this.vy < 0  && this.vx == 0) {
+    		return Directions.N;
+    	}
+    		
         if (this.vx > 0 && this.vy > 0) {
             return Directions.SE;
         }
@@ -251,8 +268,10 @@ public abstract class Robot {
             return Directions.NE;
         } else {
             return Directions.SW;
-        }
+        } 
     }
+    
+    
     
     public abstract void draw(Graphics g);
 }

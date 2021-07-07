@@ -11,17 +11,17 @@ public class Coordinate {
 	
 	public int getPx() {
 		if (this.x == 0) {
-			return 12;
+			return (SimulationV3.ROAD_WIDTH / 2);
 		}
-		return (this.x * 100) - 15;
+		return (this.x * (SimulationV3.ROAD_WIDTH + SimulationV3.H_SPACING) + (SimulationV3.ROAD_WIDTH / 2));
 		
 	}
 	
 	public int getPy() {
 		if (this.y == 0) {
-			return 12;
+			return (SimulationV3.ROAD_WIDTH / 2);
 		}
-		return (this.y * 90) - 15;
+		return (this.y * (SimulationV3.ROAD_WIDTH + SimulationV3.V_SPACING) + (SimulationV3.ROAD_WIDTH / 2));
 	}
 	
 	public int getY() {
@@ -34,7 +34,7 @@ public class Coordinate {
 	
 	
 	
-	/*public static Coordinate getCoordinate(int pX, int pY) {
+	/*public static Coordinate getCoordinate(int pX, int pY) { 
 		int x1 = Math.round(pX / 100);
 		int y1 = Math.round(pY / 90);
 		

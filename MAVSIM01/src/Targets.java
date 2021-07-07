@@ -5,8 +5,8 @@ public class Targets extends Robot {
     
     private int id;
 
-    public Targets(int vx, int vy, int px, int py, int width, int height, int courtWidth, int courtHeight, int id) {
-        super(vx, vy, px, py, width, height, courtWidth, courtHeight);
+    public Targets(Coordinate c, int vx, int vy, int width, int height, int courtWidth, int courtHeight, int id) {
+        super(vx, vy, c.getPx(), c.getPy(), width, height, courtWidth, courtHeight);
         // TODO Auto-generated constructor stub
         
         this.id = id;
@@ -42,6 +42,8 @@ public class Targets extends Robot {
     }
            
     }
+    
+    
     
 
 }

@@ -15,25 +15,15 @@ public class SimSettings extends JPanel {
 	
 	public SimSettings() {
 		
-		 h = new HashSet<Roads>();
-		for(int i = -55; i < 54; i++) {
-			h.add(new Roads(i, 7, 9));
-		}
 		
 	}
 	
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
+      //  g.drawString("Seeker Attributes", COURT_WIDTH / 2, 20);
         
-        g.setColor(Color.black);
-        g.fillRect(300, 300, 50, 50);
-        
-        for(Roads r: this.h) {
-       // 	if (Math.random() < 0.90) {
-        		r.draw(g);
-      //  	}
-        }
+
     }
     
     

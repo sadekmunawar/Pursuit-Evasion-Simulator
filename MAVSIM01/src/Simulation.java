@@ -107,12 +107,12 @@ public class Simulation extends JPanel {
         
         this.seekers = new LinkedList<Seeker>();
         
-        this.seekers.add(new Seeker(1, -1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK));
-        this.seekers.add(new Seeker(-1, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK));
+        this.seekers.add(new Seeker(new Coordinate (0, 1),1, -1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, 1));
+        this.seekers.add(new Seeker(new Coordinate (0, 1), -1, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, 2));
         
         this.targets = new LinkedList<Targets>();
-        this.targets.add(new Targets(-1, 1, 350, 350, 5, 5, COURT_WIDTH, COURT_HEIGHT, 1));
-        this.targets.add(new Targets(1, -1, 350, 200, 5, 5, COURT_WIDTH, COURT_HEIGHT, 2));
+        this.targets.add(new Targets(new Coordinate (5, 1), -1, 0, 5, 5, COURT_WIDTH, COURT_HEIGHT, 1));
+        this.targets.add(new Targets(new Coordinate (6, 1), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, 2));
     }
     
     
@@ -143,7 +143,7 @@ public class Simulation extends JPanel {
         	
             s.move();
             s.bounce(s.hitWall());
-            s.justExplored(getAreaNum(s.getPx(), s.getPy()));
+            s.justExploredInt(getAreaNum(s.getPx(), s.getPy()));
             
             for (Targets t: this.targets) {
                 if (s.distanceTo(t) < 25) {
@@ -197,8 +197,8 @@ public class Simulation extends JPanel {
                                 
                             } else {
                                 // if all targets not found
-                                HashSet<Integer> sExplored = s.getExplored();
-                                HashSet<Integer> rExplored = r.getExplored();
+                                HashSet<Integer> sExplored = s.getExploredInt();
+                                HashSet<Integer> rExplored = r.getExploredInt();
                                 
                                 sExplored.addAll(rExplored);
                                 
