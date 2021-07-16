@@ -19,7 +19,7 @@ public class RunSim implements Runnable {
     public void run() {
     	
     	
-        final JFrame frame = new JFrame("TOP LEVEL FRAME");
+        final JFrame frame = new JFrame("Simulation");
         frame.setLocation(250, 25);
 
         // Status panel

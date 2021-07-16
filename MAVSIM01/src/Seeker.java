@@ -21,6 +21,8 @@ public class Seeker extends Robot {
     
     private boolean isSending;
     
+    private double howBusy;
+    private double alpha = 0.25;
     
     private Coordinate targetLoc;
     private boolean targetReached;
@@ -33,6 +35,8 @@ public class Seeker extends Robot {
     private boolean hasData;
     
     private double sendProb;
+    
+    private int succComm;
     
     private int dataID;
     
@@ -61,7 +65,11 @@ public class Seeker extends Robot {
         
         this.dataID = 0;
         
-        this.coordinateTimeLog = new int[7][9];
+        this.succComm = 0;
+        
+        this.howBusy = 0.60;
+        
+        this.coordinateTimeLog = new int[SimulationV3.Y_MAX + 1][SimulationV3.X_MAX + 1];
         
         getEarliest();
     }
@@ -103,7 +111,6 @@ public class Seeker extends Robot {
                 
             } else {
                 this.setVy(-Math.abs(this.getVy()));
-                
             }
                
         } else {
@@ -114,18 +121,29 @@ public class Seeker extends Robot {
                 
             } else {
                 this.setVy(-Math.abs(this.getVy()));
-                
             }
-         
-            
         }
-        
     }
         
     public void sendInit(Strategies s) {
+    	
+    /*	double sendP = (double) this.succComm / (double) this.sendBuffer.size();
+    	if (sendP < 0.10 || this.sendBuffer.size() == 0) {
+    		sendP = 0.10;
+    	} */
+    	double sendP = 0;
+    	
+    	if (this.howBusy <= 0) {
+    		sendP = 0.30;
+    	} else if (this.howBusy >= 1) {
+    		sendP = 0.10;
+    	} else {
+    		sendP = 1.0 - this.howBusy;
+    	}
  
-    	if (Math.random() <= this.sendProb) {
+    	if (Math.random() < sendP) {
     		this.isSending = true;
+    		this.howBusy = this.howBusy + this.alpha;
     		
     		if (s == Strategies.Strategy1) {
     			this.ds = new Data(this.coordinateTimeLog, dataID, id);
@@ -134,7 +152,10 @@ public class Seeker extends Robot {
     		// this.ds = something
     	} else {
     		this.isSending = false;
+    		clearFilter();
     	}
+    	
+    	
     }
     
     
@@ -170,19 +191,28 @@ public class Seeker extends Robot {
     }
     
     public boolean recieveData(Data dd) {
+    	this.howBusy = this.howBusy + this.alpha;
     	if (this.hasData) {
     		this.d = null;
     	//	this.sendBuffer.removeFirst();
     	//	this.sendBuffer.addFirst(0);
-    		this.sendProb = this.sendProb - ((1 / 50));
+    	//	this.sendProb = this.sendProb - ((1 / 50)); // (1 / 50)
     		return false;
     	} else {
     		this.d = dd;
     		this.hasData = true;
     	//	this.sendBuffer.addFirst(1);
-    		this.sendProb = this.sendProb + ((1 / 50));
+    	//	this.sendProb = this.sendProb + ((1 / 50)); // (1 / 50)
     		return true;
     	}
+    }
+    
+    public void clearFilter() {
+    	this.howBusy = 0.0;
+    }
+    
+    public void fillFilter() {
+    	this.howBusy = 1.0;
     }
     
     private boolean containsData(Data d) {
@@ -221,7 +251,7 @@ public class Seeker extends Robot {
     			this.dataRecieved.put(this.d.getRoboID(), h);
     		}
     		// do something with the data
-    		if (s == Strategies.Strategy1) {
+    		if (s == Strategies.Strategy1) { /*
     			int[][] newData = this.d.getCoordinateTimeArray();
     			int min = Integer.MAX_VALUE;
     			LinkedList<Coordinate> cList = new LinkedList<Coordinate>();
@@ -249,11 +279,29 @@ public class Seeker extends Robot {
         	        int rndmNumber = rndm.nextInt(cList.size());
         	        corMin = cList.get(rndmNumber);
     			}
-    			moveTo(corMin);
+    			moveTo(corMin); */
     		}
     	}
     	this.hasData = false;
     	this.d = null;
+    }
+    
+    public void commSucc() {
+    	this.succComm++;
+    	this.sendBuffer.addFirst(1);
+    	
+    	if (this.sendBuffer.size() > SimulationV3.ROAD_WIDTH + SimulationV3.H_SPACING) {
+    		if (this.sendBuffer.getLast() == 1) {
+    			this.succComm--;
+    			this.sendBuffer.removeLast();
+    		}
+    	}
+    }
+    
+    public void commJammed() {
+    	this.succComm--;
+    	this.sendBuffer.removeFirst();
+    	this.sendBuffer.addFirst(0);
     }
     
     

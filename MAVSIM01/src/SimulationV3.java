@@ -31,6 +31,8 @@ public class SimulationV3 extends JPanel{
 	    public static final int COURT_WIDTH = 800; //800 --> up to 1200
 	    public static final int COURT_HEIGHT = 550; //550
 	    
+	    private int comSucc;
+	    
 	    
 	    public static final int X_MAX = 8;
 	    public static final int Y_MAX = 6;
@@ -47,6 +49,7 @@ public class SimulationV3 extends JPanel{
 	    // Update interval for timer, in milliseconds
 	    public static final int INTERVAL = 2;
 	    
+	    public int[][] coordinateTimeLogGlobal;
 	        
 	    private List<Seeker> seekers;
 	    private List<Targets> targets;
@@ -106,7 +109,7 @@ public class SimulationV3 extends JPanel{
 	        setBorder(BorderFactory.createLineBorder(Color.BLACK));
 	        
 	        
-	        File file = new File("files/intf_5_5_strat1_ran.csv");
+	        File file = new File("commdata/new_filter_2.csv");
 	        try {
 	            // create FileWriter object with file as parameter
 	            FileWriter outputfile = new FileWriter(file);
@@ -115,7 +118,7 @@ public class SimulationV3 extends JPanel{
 	            this.cvwriter = new CSVWriter(outputfile);
 	      
 	            // adding header to csv
-	            String[] header = { "Trials", "Caught", "Successful", "Interference", "Time" };
+	            String[] header = { "Trials", "Caught", "Successful", "Interference", "Time", "Successful Comm"};
 	            this.cvwriter.writeNext(header);
 	        } catch (IOException e) {
 	            // TODO Auto-generated catch block
@@ -205,6 +208,10 @@ public class SimulationV3 extends JPanel{
 	    public void reset() {
 	    	startTimer();
 	    	
+	    	this.coordinateTimeLogGlobal = new int[Y_MAX+1][X_MAX+1];
+	    	
+	    	this.comSucc = 0;
+	    	
 	    	this.commIDs = new HashSet<Integer>();
 	    	
 	    	this.numTrials++;
@@ -233,51 +240,26 @@ public class SimulationV3 extends JPanel{
 	        
 	        this.seekers = new LinkedList<Seeker>();
 	        
-	        Random nu = new Random();
-	        int snum = nu.nextInt(3);
-	        int snum2 = nu.nextInt(2);
+	        int numSeekers = 5;
+	        int numEvaders = 5;
 	        
-	        this.seekers.add(new Seeker(new Coordinate (snum, snum2), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, 1));
+	        for (int i = 0; i < numSeekers; i++) {
+		        Random nu = new Random();
+		        int snum = nu.nextInt(3);
+		        int snum2 = nu.nextInt(2);
+		        
+		        this.seekers.add(new Seeker(new Coordinate (snum, snum2), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, i));
+	        }
 	        
-	        int snum3 = nu.nextInt(3);
-	        int snum4 = nu.nextInt(2);
-	        
-	        this.seekers.add(new Seeker(new Coordinate (snum3, snum4), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, 2));
-	        int snum5 = nu.nextInt(3);
-	        int snum6 = nu.nextInt(2);
-	        
-	        this.seekers.add(new Seeker(new Coordinate (snum5, snum6), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, 3));
-	        int snum7 = nu.nextInt(3);
-	        int snum8 = nu.nextInt(2);
-	        
-	        this.seekers.add(new Seeker(new Coordinate (snum7, snum8), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, 4));
-	        int snum9 = nu.nextInt(3);
-	        int snum10 = nu.nextInt(2);
-	        
-	        this.seekers.add(new Seeker(new Coordinate (snum9, snum10), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, 5));
-
 	        this.targets = new LinkedList<Targets>();
-	        Random n = new Random();
-	        int num = n.nextInt(3) + 6;
-	        int num2 = n.nextInt(2);
 	        
-	        this.targets.add(new Targets(new Coordinate (num, num2), 1, 0, 5, 5, COURT_WIDTH, COURT_HEIGHT, 1));
-	        
-	        int num3 =  n.nextInt(3) + 6;
-	        int num4 =   n.nextInt(2);
-	        this.targets.add(new Targets(new Coordinate (num3, num4), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, 2));
-	        
-	        int num5 =  n.nextInt(3) + 6;
-	        int num6 =   n.nextInt(2);
-	        this.targets.add(new Targets(new Coordinate (num5, num6), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, 3));
-	        
-	        int num7 =  n.nextInt(3) + 6;
-	        int num8 =   n.nextInt(2);
-	        this.targets.add(new Targets(new Coordinate (num7, num8), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, 4));
-	        
-	        int num11 =  n.nextInt(3) + 6;
-	        int num12 =   n.nextInt(2);
-	        this.targets.add(new Targets(new Coordinate (num11, num12), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, 5));
+	        for (int i = 0; i < numEvaders; i++) {
+		        Random n = new Random();
+		        int num = n.nextInt(3) + 6;
+		        int num2 = n.nextInt(2);
+		        
+		        this.targets.add(new Targets(new Coordinate (num, num2), 1, 0, 5, 5, COURT_WIDTH, COURT_HEIGHT, 1));
+	        }
 
 	        this.totalEvaders = this.targets.size();
 	    }
@@ -323,7 +305,7 @@ public class SimulationV3 extends JPanel{
 	            t.move();
 	            
 	            // reached the bottom
-	            if (t.getPy() > 520) {
+	            if (t.getPy() > COURT_HEIGHT - ROAD_WIDTH) {
 	            	this.successfulEvaders++;
 	            	toRemove1.add(t);
 	            }
@@ -349,6 +331,7 @@ public class SimulationV3 extends JPanel{
 		            if (this.seekerStrategy == Strategies.Random) {
 		            	s.go(getARandomDirection(c));
 		            } else if (this.seekerStrategy == Strategies.Strategy1) {
+		            	this.coordinateTimeLogGlobal[c.getY()][c.getX()] = this.time;
 		            	s.recordTimeAndCoordinate(c, this.time);
 		            	if (!s.hasReachedTarget() && s.getTargetLoc() != null) {
 			            	if (c.equals(s.getTargetLoc())) {
@@ -361,7 +344,7 @@ public class SimulationV3 extends JPanel{
 		            	} else {
 		            		// this is unnecessary and could break; a better option is to go random
 		            		s.go(getTargetDirection(c, s.getTargetLoc()));
-		            	}
+		            	} 
 		            	
 		            }
 	            }
@@ -414,7 +397,9 @@ public class SimulationV3 extends JPanel{
 	 	                        			r.setPartnerID(-1);
 	 	                        			interf = true;
 	 	                        		} else {
+	 	                        			this.comSucc++;
 	 	                        			r.setPartnerID(u.getID());
+	 	                        			r.commSucc();
 	 	                        		}
 	 	                        		
 	 	                        	}
@@ -423,7 +408,9 @@ public class SimulationV3 extends JPanel{
 	        			}
 	        		}
 	        		if (interf) {
+	        			this.comSucc--;
 	        			this.interference++;
+	        			r.commJammed();
 	        		}
 	        	}
 	        }
@@ -443,7 +430,7 @@ public class SimulationV3 extends JPanel{
 	        if (this.targetsFound + this.successfulEvaders == this.totalEvaders) {
 	       
 	        	
-	        	String[] s = {this.numTrials + "", this.targetsFound + "", this.successfulEvaders + "", this.interference + "", this.time + ""};
+	        	String[] s = {this.numTrials + "", this.targetsFound + "", this.successfulEvaders + "", this.interference + "", this.time + "", this.comSucc + ""};
 	        	
 	        	this.cvwriter.writeNext(s);
 	        	
@@ -501,13 +488,6 @@ public class SimulationV3 extends JPanel{
 	        }
 	    }
 	    
-	/*    private int getAreaNum(int px, int py) {
-	        int col = px / 100;
-	        int row = py / 100;
-	        
-	        
-	        return (row * this.cols + col);
-	    } */
 	    
 	    private boolean inPath(int pX1, int pY1, int pX2, int pY2, int oX, int oY, int w) {
 	        int a = -1 * (pY2 -pY1);
@@ -524,45 +504,6 @@ public class SimulationV3 extends JPanel{
 	        return false;
 	    }
 	    
-	 //   private boolean allTargetsFound(HashSet<Integer> h) {
-	      
-	      /*  for(Targets t: this.targets) {
-	            if (!h.contains(t.getID())) {
-	                return false;
-	            }
-	        } */
-	        
-	  //      return h.size() == this.targets.size();
-	  //  }
-	    
-	/*    private HashSet<Integer> unexplored(HashSet<Integer> h) {
-	        HashSet<Integer> k = new HashSet<Integer>();
-	        k.addAll(h);
-	        for (int i = 0; i < this.rows * this.cols; i++) {
-	            if (h.contains(i)) {
-	                k.remove(i);
-	            }
-	        }
-	        return k;
-	    }
-	    
-	    private int getX(int areaNum) {
-	        
-	        int colNo = areaNum % this.rows;
-	        
-	        return 50 + (100 * colNo);
-	        
-	        
-	    }
-	    
-	    private int getY(int areaNum) {
-	        
-	        int rowNo = areaNum / this.cols;
-	        
-	        return 50 + (100 * rowNo);
-	        
-	        
-	    } */
 	    
 	    private Directions getARandomDirection(Coordinate c) {
 	    	LinkedList<Directions> l =  new LinkedList<Directions>();
@@ -860,7 +801,7 @@ public class SimulationV3 extends JPanel{
 	        return new Dimension(COURT_WIDTH, COURT_HEIGHT);
 	    } 
 	    
-	    public static void writeDataLineByLine(String filePath)
+	/*    public static void writeDataLineByLine(String filePath)
 	    {
 	        // first create file object for file placed at location
 	        // specified by filepath
@@ -889,7 +830,7 @@ public class SimulationV3 extends JPanel{
 	            // TODO Auto-generated catch block
 	            e.printStackTrace();
 	        }
-	    }
+	    } */
 
 	
 

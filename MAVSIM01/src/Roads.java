@@ -80,7 +80,7 @@ public class Roads {
     //	if (c.getY() <= 0) {
     //		return 1000;
     //	}
-    	return ((c.getY() - 1) * 9) + c.getX();
+    	return ((c.getY() - 1) * (SimulationV3.X_MAX + 1)) + c.getX();
     	
     }
     
@@ -88,7 +88,7 @@ public class Roads {
    // 	if (c.getY() >= 6) {
   //  		return 1000;
  //   	}
-    	return getNorth(c) + 9;
+    	return getNorth(c) + (SimulationV3.X_MAX + 1);
     	
     }
     
@@ -96,7 +96,7 @@ public class Roads {
   // 	if (c.getX() <= 0) {
   //  		return 1000;
 //   	}
-    	return -1 * (((8 * c.getY()) - 1) + c.getX());
+    	return -1 * ((((SimulationV3.X_MAX) * c.getY()) - 1) + c.getX());
     	
     }
     
@@ -104,7 +104,7 @@ public class Roads {
 //		if (c.getX() >= 8) {
 	//		return 1000;
 //		}
-    	return -1 * (((8 * c.getY()) - 1) + c.getX()) - 1;
+    	return -1 * ((((SimulationV3.X_MAX) * c.getY()) - 1) + c.getX()) - 1;
     	
     }
 	
