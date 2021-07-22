@@ -70,7 +70,7 @@ public class RunSim implements Runnable {
         set.add(ranGrid);
         set.add(spaceHolder);
         
-        // Seekers
+        /*******************Seeker Buttons **********************************/
         set.add(new JLabel("Seekers :"));
         
  
@@ -100,22 +100,31 @@ public class RunSim implements Runnable {
         });
         
         
+        JRadioButton seekerStr3 = new JRadioButton("Strategy 3");
+        seekerStr3.setToolTipText(" ");
+        seekerStr3.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	sim.setSeekerStrategy(Strategies.Strategy3);
+            }
+        });
+        
         ButtonGroup seekerAttr = new ButtonGroup();
         seekerAttr.add(seekerRandom);
         seekerAttr.add(seekerStr1);
         seekerAttr.add(seekerStr2);
+        seekerAttr.add(seekerStr3);
         
 
         set.add(seekerRandom);
         set.add(seekerStr1);
         set.add(seekerStr2);
+        set.add(seekerStr3);
         
         set.add(new JLabel("     "));
         set.add(new JLabel("     "));
         set.add(new JLabel("     "));
-        set.add(new JLabel("     "));
         
-        //Evaders
+        /*******************Evader Buttons **********************************/
         set.add(new JLabel("Evaders :"));
         
         JRadioButton evaderRandom = new JRadioButton("Random");
@@ -158,10 +167,10 @@ public class RunSim implements Runnable {
         });
         
         
-        JRadioButton doubleSpeedNBetterSight = new JRadioButton("Double Speed + Better Sight");
+        JRadioButton doubleSpeedNBetterSight = new JRadioButton("Double Speed + South Biased + Better Sight");
         doubleSpeedNBetterSight.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-            	sim.setEvaderStrategy(Strategies.Strategy4);
+            	sim.setEvaderStrategy(Strategies.Strategy5);
             }
         });
         
@@ -171,6 +180,7 @@ public class RunSim implements Runnable {
         evaderAttr.add(doubleSpeed);
         evaderAttr.add(betterSight);
         evaderAttr.add(southBiasedNBetterSight);
+        evaderAttr.add(doubleSpeedNBetterSight);
 
         
         set.add(evaderRandom);
@@ -179,10 +189,7 @@ public class RunSim implements Runnable {
         set.add(new JLabel("     "));
         set.add(betterSight);
         set.add(southBiasedNBetterSight);
-        set.add(new JLabel("     "));
-        
-
-        
+        set.add(doubleSpeedNBetterSight);
         
         
         frame.add(set, BorderLayout.CENTER);
@@ -192,9 +199,7 @@ public class RunSim implements Runnable {
         // Reset button
         final JPanel control_panel = new JPanel();
         frame.add(control_panel, BorderLayout.NORTH);
-        
-        
-        
+
         // listener to the reset button
         final JButton start = new JButton("Start");
         start.addActionListener(new ActionListener() {

@@ -13,6 +13,7 @@ public class Coordinate {
 		if (this.x == 0) {
 			return (SimulationV3.ROAD_WIDTH / 2);
 		}
+		
 		return (this.x * (SimulationV3.ROAD_WIDTH + SimulationV3.H_SPACING) + (SimulationV3.ROAD_WIDTH / 2));
 		
 	}
@@ -21,6 +22,7 @@ public class Coordinate {
 		if (this.y == 0) {
 			return (SimulationV3.ROAD_WIDTH / 2);
 		}
+		
 		return (this.y * (SimulationV3.ROAD_WIDTH + SimulationV3.V_SPACING) + (SimulationV3.ROAD_WIDTH / 2));
 	}
 	

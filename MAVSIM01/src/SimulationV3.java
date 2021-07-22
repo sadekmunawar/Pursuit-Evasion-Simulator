@@ -33,6 +33,11 @@ public class SimulationV3 extends JPanel{
 	    
 	    private int comSucc;
 	    
+	    private double timedFailureProbability = 0.00007;
+	    
+	    private boolean failure;
+	    
+	    private LinkedList<Seeker> infailure;
 	    
 	    public static final int X_MAX = 8;
 	    public static final int Y_MAX = 6;
@@ -87,6 +92,9 @@ public class SimulationV3 extends JPanel{
 	    
 	    private HashSet<Integer> commIDs;
 	    
+	    private int timedFailure;
+	    private int absoluteFailure;
+	    
 	    
 	    private CSVWriter cvwriter;
 	    
@@ -105,11 +113,15 @@ public class SimulationV3 extends JPanel{
 	    	
 	    	this.numTrials = 0;
 	        
+	    	this.failure = false;
+	    	
+	    	this.timedFailure = 0;
+	    	this.absoluteFailure = 0;
 	        
 	        setBorder(BorderFactory.createLineBorder(Color.BLACK));
 	        
 	        
-	        File file = new File("commdata/new_filter_2.csv");
+	        File file = new File(SimSettings.FilePath);
 	        try {
 	            // create FileWriter object with file as parameter
 	            FileWriter outputfile = new FileWriter(file);
@@ -118,7 +130,7 @@ public class SimulationV3 extends JPanel{
 	            this.cvwriter = new CSVWriter(outputfile);
 	      
 	            // adding header to csv
-	            String[] header = { "Trials", "Caught", "Successful", "Interference", "Time", "Successful Comm"};
+	            String[] header = { "Trials", "Caught", "Successful", "Interference", "Time", "Successful Comm", "TF", "AF"};
 	            this.cvwriter.writeNext(header);
 	        } catch (IOException e) {
 	            // TODO Auto-generated catch block
@@ -208,6 +220,12 @@ public class SimulationV3 extends JPanel{
 	    public void reset() {
 	    	startTimer();
 	    	
+	    	
+	    	this.absoluteFailure = 0;
+	    	this.timedFailure = 0;
+	    	
+	    	this.infailure = new LinkedList<Seeker>();
+	    	
 	    	this.coordinateTimeLogGlobal = new int[Y_MAX+1][X_MAX+1];
 	    	
 	    	this.comSucc = 0;
@@ -240,13 +258,15 @@ public class SimulationV3 extends JPanel{
 	        
 	        this.seekers = new LinkedList<Seeker>();
 	        
-	        int numSeekers = 5;
-	        int numEvaders = 5;
+	        int numSeekers = SimSettings.NumPursuers;
+	        int numEvaders = SimSettings.NumEvaders;
 	        
 	        for (int i = 0; i < numSeekers; i++) {
 		        Random nu = new Random();
-		        int snum = nu.nextInt(3);
-		        int snum2 = nu.nextInt(2);
+		      //  int snum = nu.nextInt(3); 
+		        //int snum2 = nu.nextInt(2);
+		        int snum = nu.nextInt(8); // 3
+		        int snum2 = 6;//nu.nextInt(2);
 		        
 		        this.seekers.add(new Seeker(new Coordinate (snum, snum2), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, i));
 	        }
@@ -255,8 +275,11 @@ public class SimulationV3 extends JPanel{
 	        
 	        for (int i = 0; i < numEvaders; i++) {
 		        Random n = new Random();
-		        int num = n.nextInt(3) + 6;
-		        int num2 = n.nextInt(2);
+		       // int num = n.nextInt(3) + 6;
+		       // int num2 = n.nextInt(2);
+		        
+		        int num = n.nextInt(8); //n.nextInt(3) + 6;
+		        int num2 = 0;            //n.nextInt(2);
 		        
 		        this.targets.add(new Targets(new Coordinate (num, num2), 1, 0, 5, 5, COURT_WIDTH, COURT_HEIGHT, 1));
 	        }
@@ -267,103 +290,231 @@ public class SimulationV3 extends JPanel{
 	    
 	    public void tick() {
 	        if (!simDone) {
+	        	
+		        if (failure) {
+			        	
+			        LinkedList<Seeker> unfail = new LinkedList<Seeker>();
+			        
+			        for (Seeker f: this.infailure) {
+			        	f.updateFailureTime();
+			        	if (f.getFailurePreiod() >= 900) {
+			        		unfail.add(f);
+			        		f.endFailure();
+			        	}
+			        }
+			        
+			        this.infailure.removeAll(unfail);
+			        this.seekers.addAll(unfail);
+		        }
 	            
-	            this.time += INTERVAL;
-	            
-	        HashSet<Targets> toRemove1 = new HashSet<Targets>();  
-	        
-	        for (Targets t: this.targets) {
-
-	            Coordinate c = getCoordinate(t.getPx(), t.getPy());
-	            
-	            if (c != null) {
-	            	if (this.evaderStrategy == Strategies.Random) {
-	            		t.go(getARandomDirection(c));
-	            	} else if (this.evaderStrategy == Strategies.Strategy1 || this.evaderStrategy == Strategies.Strategy4) {
-	            		t.go(getSouthBiasedDirection(c));
-	            	} else if (this.evaderStrategy == Strategies.Strategy2) {
-	            		t.go(getARandomDirection(c));
+		        this.time += INTERVAL;
+		            
+		        HashSet<Targets> toRemove1 = new HashSet<Targets>();  
+		        
+		        for (Targets t: this.targets) {
+		        	
+		        	// fix this later
+		        //	t.bounce(t.hitWall());
+	
+		            Coordinate c = getCoordinate(t.getPx(), t.getPy(), 1);
+		            
+		            if (c != null) {
+		            	if (this.evaderStrategy == Strategies.Random) {
+		            		t.go(getARandomDirection(c));
+		            	} else if (this.evaderStrategy == Strategies.Strategy1 || this.evaderStrategy == Strategies.Strategy4 || this.evaderStrategy == Strategies.Strategy5) {
+		            		t.go(getSouthBiasedDirection(c));
+		            		if (this.evaderStrategy == Strategies.Strategy5) {
+		            			t.move();
+		            		}
+		            	} else if (this.evaderStrategy == Strategies.Strategy2) {
+		            		t.go(getARandomDirection(c));
+		            		t.move();
+		            	} else if (this.evaderStrategy == Strategies.Strategy3) {
+		            		t.go(getARandomDirection(c));
+		            	}
+		            }
+		            
+		           
+		            if (this.evaderStrategy == Strategies.Strategy2) {
+		            	t.move();
+		            } else if (this.evaderStrategy == Strategies.Strategy3 || this.evaderStrategy == Strategies.Strategy4 || this.evaderStrategy == Strategies.Strategy5) {
+		            	for (Seeker y: this.seekers) {
+		            		if (t.distanceTo(y) < catchLimit + 10) {
+		            			t.go(moveAway(t.getPx(), t.getPy(), y.getPx(), y.getPy(), t.getCurrDirection(), c));
+		            		}
+		            	}
+		            }
+		            
+	            	if (this.evaderStrategy == Strategies.Strategy5) {
 	            		t.move();
-	            	} else if (this.evaderStrategy == Strategies.Strategy3) {
-	            		t.go(getARandomDirection(c));
 	            	}
-	            }
-	            
-	            
-	            // move the move to after this block
-	         //   t.move();
-	            if (this.evaderStrategy == Strategies.Strategy2) {
-	            	t.move();
-	            } else if (this.evaderStrategy == Strategies.Strategy3 || this.evaderStrategy == Strategies.Strategy4) {
-	            	for (Seeker y: this.seekers) {
-	            		if (t.distanceTo(y) < catchLimit + 10) {
-	            			t.go(moveAway(t.getPx(), t.getPy(), y.getPx(), y.getPy(), t.getCurrDirection(), c));
-	            		}
-	            	}
-	            }
-	            
-	            t.move();
-	            
-	            // reached the bottom
-	            if (t.getPy() > COURT_HEIGHT - ROAD_WIDTH) {
-	            	this.successfulEvaders++;
-	            	toRemove1.add(t);
-	            }
-	            
+		            
+		            t.move();
+		            
+		            // reached the bottom
+		            if (t.getPy() > (COURT_HEIGHT - ROAD_WIDTH) + (ROAD_WIDTH / 4)) {
+		            	this.successfulEvaders++;
+		            	toRemove1.add(t);
+		            }
+		            
+		        }
+		        
+		        this.targets.removeAll(toRemove1);
+		        		        
+		        HashSet<Seeker> toRemoveSeekers = new HashSet<Seeker>();
+		        
+		        for (Seeker s: this.seekers) {
+		        	
+		        	if (failure) {
+		        		
+		        		double p = Math.random();
+		        		
+		        		double absoluteP = 0.5 * timedFailureProbability;
+		        		
+			        	if (p < absoluteP) {
+			        		toRemoveSeekers.add(s);
+			        		this.absoluteFailure++;
+			        		continue;
+			        	} else if (p >= absoluteP && p < (absoluteP + timedFailureProbability)) {
+			        		toRemoveSeekers.add(s);
+			        		s.startFailure();
+			        		this.infailure.add(s);
+			        		this.timedFailure++;
+			        		continue;
+			        	}
+			        	
+		        	}
+		        	
+		        	s.sendInit(this.seekerStrategy);
+		        	s.setPartnerID(-1);
+		        	
+		        	Coordinate c = getCoordinate(s.getPx(), s.getPy(), 0);
+		            
+		            if (c != null) {
+		            	
+			            if (this.seekerStrategy == Strategies.Random) {
+			            	s.go(getARandomDirection(c));
+			            } else if (this.seekerStrategy == Strategies.Strategy1) {
+			            	s.recordTimeAndCoordinate(c, this.time);
+			            	if (!s.hasReachedTarget() && s.getTargetLoc() != null) {
+				            	if (c.equals(s.getTargetLoc())) {
+				            		s.targetReached();
+				            		Coordinate destination = s.getEarliest();
+				            		s.go(getTargetDirection(c, destination));
+				            	} else {
+				            		s.go(getTargetDirection(c, s.getTargetLoc()));
+				            	}
+			            	} else {
+			            		// this is unnecessary and could break; a better option is to go random
+			            		s.go(getTargetDirection(c, s.getTargetLoc()));
+			            	} 
+			            } else if (this.seekerStrategy == Strategies.Strategy2) {
+			            	this.coordinateTimeLogGlobal[c.getY()][c.getX()] = this.time;
+			            	s.moveTo(getEarliest());
+			            	s.go(getTargetDirection(c, s.getTargetLoc()));
+			            } else if (this.seekerStrategy == Strategies.Strategy3) {
+			            //	s.moveTo(s.getTaskLocation);
+			            	s.go(getTargetDirection(c, s.getTargetLoc()));
+			            }
+		            }
+		            
+		            HashSet<Targets> toRemove = new HashSet<Targets>();
+		            
+		            for (Targets t: this.targets) {
+		                if (s.distanceTo(t) < catchLimit) {
+		                    s.targetDiscovered(t.getID());
+		                    this.targetsFound++;
+		                   // this.targetsDiscovered.add(t.getID());
+		                    toRemove.add(t);
+		                }
+		            }
+		            
+		            this.targets.removeAll(toRemove);
+		        }
+		        
+		        this.seekers.removeAll(toRemoveSeekers);
+		        
+		        handleCommunication();
+		        
+		        
+		        for (Seeker p: this.seekers) {
+		        	p.processData(this.seekerStrategy);
+		        	
+		        	p.move();
+		        }
+		        
+		        String m = "Time " + this.time + " ---------------- " + "Evaders Found: " + this.targetsFound + 
+		        		" ---------------- " + "Evaders Successful: " + this.successfulEvaders + " -------------- " + "Trial: " + this.numTrials + "------ Communication Interference: "
+		        		+ this.interference;
+		        
+		        status.setText(m);
+		        
+		        if (this.targetsFound + this.successfulEvaders == this.totalEvaders) {
+		       
+		        	
+		        	String[] s = {this.numTrials + "", this.targetsFound + "", this.successfulEvaders + "", this.interference + "", this.time + "", this.comSucc + "", this.timedFailure + "", this.absoluteFailure + ""};
+		        	
+		        	this.cvwriter.writeNext(s);
+		        	
+		        	if (this.numTrials >= 50) {
+			        	try {
+							this.cvwriter.close();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		        	}
+		        	
+		        	this.simDone = true;
+	
+		        }
+		        }
+		        repaint();
+		        
+		        if (this.simDone) {
+			        if (this.numTrials < 50 || this.time > 120000) {
+			        	reset();
+			        }
+	        }
+	    }
+	    
+	    
+	    @Override
+	    public void paintComponent(Graphics g) {
+	        super.paintComponent(g);
+	        
+	        for(Roads r: this.paths) {
+	        //	if (Math.random() < 0.90) {
+	        		r.draw(g);
+	        	//}
 	        }
 	        
-	        this.targets.removeAll(toRemove1);
-	        
-	        this.commTime.replaceAll((k, v) -> v + 10);
+	        for (Obstacles o: this.obs) {
+	        	o.draw(g);
+	        }
 	        
 	        for (Seeker s: this.seekers) {
-	        	
-	        	
-	        	s.sendInit(this.seekerStrategy);
-	        	s.setPartnerID(-1);
-	        	
-	        	Coordinate c = getCoordinate(s.getPx(), s.getPy());
-	            
-	            if (c != null) {
-	            	
-	            	
-	            
-		            if (this.seekerStrategy == Strategies.Random) {
-		            	s.go(getARandomDirection(c));
-		            } else if (this.seekerStrategy == Strategies.Strategy1) {
-		            	this.coordinateTimeLogGlobal[c.getY()][c.getX()] = this.time;
-		            	s.recordTimeAndCoordinate(c, this.time);
-		            	if (!s.hasReachedTarget() && s.getTargetLoc() != null) {
-			            	if (c.equals(s.getTargetLoc())) {
-			            		s.targetReached();
-			            		Coordinate destination = s.getEarliest();
-			            		s.go(getTargetDirection(c, destination));
-			            	} else {
-			            		s.go(getTargetDirection(c, s.getTargetLoc()));
-			            	}
-		            	} else {
-		            		// this is unnecessary and could break; a better option is to go random
-		            		s.go(getTargetDirection(c, s.getTargetLoc()));
-		            	} 
-		            	
-		            }
-	            }
-	            
-	            
-	            HashSet<Targets> toRemove = new HashSet<Targets>();
-	            
-	            for (Targets t: this.targets) {
-	                if (s.distanceTo(t) < catchLimit) {
-	                    s.targetDiscovered(t.getID());
-	                    this.targetsFound++;
-	                   // this.targetsDiscovered.add(t.getID());
-	                    toRemove.add(t);
-	                }
-	            }
-	            
-	            this.targets.removeAll(toRemove);
+	            s.draw(g);
 	        }
 	        
+	        for (Targets t: this.targets) {
+	            t.draw(g);
+	        }
+	        
+	        for (Communicators c: this.comm.values()) {
+	        	if (c.getR1().getPartnerID() == c.getR2().getID() || c.getR2().getPartnerID() == c.getR1().getID()) {
+	        		g.setColor(Color.BLUE); 
+	        		g.drawLine(c.getR1().getPx(), c.getR1().getPy(), c.getR2().getPx(), c.getR2().getPy());
+	        	}
+	        	
+	        }
+	        
+	        for (Seeker f: this.infailure) {
+	        	f.draw(g);
+	        }
+	    }
+	    
+	    private void handleCommunication() {
 	        this.comm = new HashMap<Integer, Communicators>();
 	        
 	        for (Seeker r: this.seekers) {
@@ -413,78 +564,6 @@ public class SimulationV3 extends JPanel{
 	        			r.commJammed();
 	        		}
 	        	}
-	        }
-	        
-	        for (Seeker p: this.seekers) {
-	        	p.processData(this.seekerStrategy);
-	        	
-	        	p.move();
-	        }
-	        
-	        String m = "Time " + this.time + " ---------------- " + "Evaders Found: " + this.targetsFound + 
-	        		" ---------------- " + "Evaders Successful: " + this.successfulEvaders + " -------------- " + "Trial: " + this.numTrials + "------ Communication Interference: "
-	        		+ this.interference;
-	        
-	        status.setText(m);
-	        
-	        if (this.targetsFound + this.successfulEvaders == this.totalEvaders) {
-	       
-	        	
-	        	String[] s = {this.numTrials + "", this.targetsFound + "", this.successfulEvaders + "", this.interference + "", this.time + "", this.comSucc + ""};
-	        	
-	        	this.cvwriter.writeNext(s);
-	        	
-	        	if (this.numTrials >= 50) {
-		        	try {
-						this.cvwriter.close();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-	        	}
-	        	
-	        	this.simDone = true;
-
-	        }
-	        }
-	        repaint();
-	        
-	        if (this.simDone) {
-		        if (this.numTrials < 50 || this.time > 120000) {
-		        	reset();
-		        }
-	        }
-	    }
-	    
-	    
-	    @Override
-	    public void paintComponent(Graphics g) {
-	        super.paintComponent(g);
-	        
-	        for(Roads r: this.paths) {
-	        //	if (Math.random() < 0.90) {
-	        		r.draw(g);
-	        	//}
-	        }
-	        
-	        for (Obstacles o: this.obs) {
-	        	o.draw(g);
-	        }
-	        
-	        for (Seeker s: this.seekers) {
-	            s.draw(g);
-	        }
-	        
-	        for (Targets t: this.targets) {
-	            t.draw(g);
-	        }
-	        
-	        for (Communicators c: this.comm.values()) {
-	        	if (c.getR1().getPartnerID() == c.getR2().getID() || c.getR2().getPartnerID() == c.getR1().getID()) {
-	        		g.setColor(Color.BLUE); 
-	        		g.drawLine(c.getR1().getPx(), c.getR1().getPy(), c.getR2().getPx(), c.getR2().getPy());
-	        	}
-	        	
 	        }
 	    }
 	    
@@ -631,7 +710,7 @@ public class SimulationV3 extends JPanel{
 	    		} else {
 	    			return Directions.E;
 	    		}
-	    	} else if (x == 8 && y == 0) {
+	    	} else if (x == X_MAX && y == 0) {
 	    		if (eX > pX) {
 	    			return Directions.S;
 	    		} else {
@@ -657,7 +736,7 @@ public class SimulationV3 extends JPanel{
 	    				return Directions.W;
 	    			}
 	    		}
-	    	} else if (x == 8) {
+	    	} else if (x == X_MAX) {
 	    		if (pX < eX) {
 	    			if (Math.random() <= 0.70) {
 	    				return Directions.S;
@@ -747,7 +826,9 @@ public class SimulationV3 extends JPanel{
 	    	return l.get(randomNum);
 	    }
 	    
-	    private Coordinate getCoordinate(int pX, int pY) {
+	    
+	    // i = 1; called by evader; i = 0 >> called by pursuers
+	    private Coordinate getCoordinate(int pX, int pY, int i) {
 			int x1 = (int)Math.round((double)pX / (H_SPACING + ROAD_WIDTH));
 			int y1 = (int)Math.round((double)pY / (V_SPACING + ROAD_WIDTH));
 			
@@ -763,7 +844,7 @@ public class SimulationV3 extends JPanel{
 			
 			int diff = 0;
 			
-			if (this.evaderStrategy == Strategies.Strategy2) {
+			if ((this.evaderStrategy == Strategies.Strategy2 || this.evaderStrategy == Strategies.Strategy5) && i == 1) {
 				diff = 1;
 			}
 			
@@ -778,6 +859,35 @@ public class SimulationV3 extends JPanel{
 			return null;
 			
 		}
+	    
+	    private Coordinate getEarliest() {
+	    	int min = Integer.MAX_VALUE;
+			Coordinate corMin = null;
+			LinkedList<Coordinate> cList = new LinkedList<Coordinate>();
+			for (int i = 0; i < this.coordinateTimeLogGlobal.length; i++) {
+				for (int j = 0; j < this.coordinateTimeLogGlobal[0].length; j++) {
+					
+					if (this.coordinateTimeLogGlobal[i][j] == min) {
+						cList.add(new Coordinate(j, i));
+					}
+
+					if (this.coordinateTimeLogGlobal[i][j] < min) {
+						min = this.coordinateTimeLogGlobal[i][j];
+						corMin = new Coordinate(j, i);
+					}
+					
+				}
+			}
+			
+			if (!cList.isEmpty()) {
+				Random rndm = new Random();
+
+		        int rndmNumber = rndm.nextInt(cList.size());
+		        corMin = cList.get(rndmNumber);
+			}
+			
+			return corMin;
+	    }
 	
 	    
 /*	    private Coordinate getARandomCoordinate() {

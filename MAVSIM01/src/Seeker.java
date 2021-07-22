@@ -16,13 +16,15 @@ public class Seeker extends Robot {
     
     private HashMap<Integer, HashSet<Integer>> dataRecieved;
     
+    private Task currTask;
+    
     
     private LinkedList<Integer> sendBuffer;
     
     private boolean isSending;
     
     private double howBusy;
-    private double alpha = 0.25;
+    private double alpha = 0.20;
     
     private Coordinate targetLoc;
     private boolean targetReached;
@@ -47,6 +49,7 @@ public class Seeker extends Robot {
     
     private Data ds;
     
+    private int failurePeriod;
     
     public Seeker(Coordinate c, int vx, int vy, int width, int height, int courtWidth, int courtHeight, Color color, int id) {
         super(vx, vy, c.getPx(), c.getPy(), width, height, courtWidth, courtHeight);
@@ -69,7 +72,11 @@ public class Seeker extends Robot {
         
         this.howBusy = 0.60;
         
+        this.failurePeriod = 0;
+        
         this.coordinateTimeLog = new int[SimulationV3.Y_MAX + 1][SimulationV3.X_MAX + 1];
+        
+        this.currTask = new Task();
         
         getEarliest();
     }
@@ -78,6 +85,10 @@ public class Seeker extends Robot {
     public void draw(Graphics g) {
         // TODO Auto-generated method stub
         g.setColor(this.color);
+        if (this.failurePeriod != 0) {
+        	g.setColor(Color.YELLOW);
+        }
+        
         g.fillOval(this.getPx(), this.getPy(), this.getWidth(), this.getHeight());  
     }
     
@@ -136,7 +147,7 @@ public class Seeker extends Robot {
     	if (this.howBusy <= 0) {
     		sendP = 0.30;
     	} else if (this.howBusy >= 1) {
-    		sendP = 0.10;
+    		sendP = 0.15;
     	} else {
     		sendP = 1.0 - this.howBusy;
     	}
@@ -154,10 +165,24 @@ public class Seeker extends Robot {
     		this.isSending = false;
     		clearFilter();
     	}
-    	
-    	
+
     }
     
+    public void startFailure() {
+    	this.failurePeriod = 1;
+    }
+    
+    public void endFailure() {
+    	this.failurePeriod = 0;
+    }
+    
+    public void updateFailureTime() {
+    	this.failurePeriod++;
+    }
+    
+    public int getFailurePreiod() {
+    	return this.failurePeriod;
+    }
     
     public boolean sendStatus() {
     	return this.isSending;
@@ -170,7 +195,6 @@ public class Seeker extends Robot {
     public Data toSendData() {
     	return this.ds;
     }
-    
     
     public void moveTo(Coordinate c) {
     	this.targetLoc = c;
@@ -251,7 +275,7 @@ public class Seeker extends Robot {
     			this.dataRecieved.put(this.d.getRoboID(), h);
     		}
     		// do something with the data
-    		if (s == Strategies.Strategy1) { /*
+    		if (s == Strategies.Strategy1) { 
     			int[][] newData = this.d.getCoordinateTimeArray();
     			int min = Integer.MAX_VALUE;
     			LinkedList<Coordinate> cList = new LinkedList<Coordinate>();
@@ -279,12 +303,13 @@ public class Seeker extends Robot {
         	        int rndmNumber = rndm.nextInt(cList.size());
         	        corMin = cList.get(rndmNumber);
     			}
-    			moveTo(corMin); */
-    		}
+    			moveTo(corMin); 
+    		} 
     	}
     	this.hasData = false;
     	this.d = null;
     }
+    
     
     public void commSucc() {
     	this.succComm++;
@@ -421,6 +446,15 @@ public class Seeker extends Robot {
     
     public void waiting(boolean w) {
     	this.waiting = w;
+    }
+    
+    public Task getCurrTask() {
+    	return this.currTask;
+    }
+    
+    public Coordinate getTaskLocation() {
+    	
+    	return null;
     }
 
 	@Override
