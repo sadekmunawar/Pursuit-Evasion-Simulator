@@ -113,7 +113,7 @@ public class SimulationV3 extends JPanel{
 	    	
 	    	this.numTrials = 0;
 	        
-	    	this.failure = false;
+	    	this.failure = SimSettings.Failure;
 	    	
 	    	this.timedFailure = 0;
 	    	this.absoluteFailure = 0;
@@ -263,23 +263,24 @@ public class SimulationV3 extends JPanel{
 	        
 	        for (int i = 0; i < numSeekers; i++) {
 		        Random nu = new Random();
-		      //  int snum = nu.nextInt(3); 
-		        //int snum2 = nu.nextInt(2);
-		        int snum = nu.nextInt(8); // 3
-		        int snum2 = 6;//nu.nextInt(2);
+		        int snum = nu.nextInt(3); 
+		       int snum2 = nu.nextInt(2);
+		      //  int snum = nu.nextInt(8); // 3
+		      //  int snum2 = 6;//nu.nextInt(2);
 		        
 		        this.seekers.add(new Seeker(new Coordinate (snum, snum2), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, i));
+		        
 	        }
 	        
 	        this.targets = new LinkedList<Targets>();
 	        
 	        for (int i = 0; i < numEvaders; i++) {
 		        Random n = new Random();
-		       // int num = n.nextInt(3) + 6;
-		       // int num2 = n.nextInt(2);
+		       int num = n.nextInt(3) + 6;
+		        int num2 = n.nextInt(2);
 		        
-		        int num = n.nextInt(8); //n.nextInt(3) + 6;
-		        int num2 = 0;            //n.nextInt(2);
+		     //   int num = n.nextInt(8); //n.nextInt(3) + 6;
+		    //    int num2 = 0;            //n.nextInt(2);
 		        
 		        this.targets.add(new Targets(new Coordinate (num, num2), 1, 0, 5, 5, COURT_WIDTH, COURT_HEIGHT, 1));
 	        }
@@ -406,15 +407,90 @@ public class SimulationV3 extends JPanel{
 				            	}
 			            	} else {
 			            		// this is unnecessary and could break; a better option is to go random
-			            		s.go(getTargetDirection(c, s.getTargetLoc()));
+			            		//s.go(getTargetDirection(c, s.getTargetLoc()));
+			            		s.targetReached();
+			            		Coordinate destination = s.getEarliest();
+			            		s.go(getTargetDirection(c, destination));
 			            	} 
 			            } else if (this.seekerStrategy == Strategies.Strategy2) {
 			            	this.coordinateTimeLogGlobal[c.getY()][c.getX()] = this.time;
 			            	s.moveTo(getEarliest());
 			            	s.go(getTargetDirection(c, s.getTargetLoc()));
 			            } else if (this.seekerStrategy == Strategies.Strategy3) {
+			            	if (!s.hasReachedTarget() && s.getTargetLoc() != null) {
+			            		if (c.equals(s.getTargetLoc())) {
+				            		s.targetReached();
+				            		Coordinate destination = s.getTaskedCoordinate();
+				            		s.go(getTargetDirection(c, destination));
+			            			
+			            		} else {
+			            			s.go(getTargetDirection(c, s.getTargetLoc()));
+			            		}
+
+			            	} else {
+			            		s.go(getTargetDirection(c, s.getTaskedCoordinate()));
+			            	}
 			            //	s.moveTo(s.getTaskLocation);
 			            	s.go(getTargetDirection(c, s.getTargetLoc()));
+			            } else if (this.seekerStrategy == Strategies.Strategy4) {
+			            	s.cuurCoordinate(c);
+			            	if (c.getY() == 0) {
+			            		s.changePhase(Seeker.Phase.Phase3);
+			            	}
+			            	 if (c.getY() == 5 && s.getPhase() == Seeker.Phase.Phase3) {
+			            		 s.changePhase(Seeker.Phase.Phase2);
+			            	 }
+			     
+			            	if (!s.hasReachedTarget() && s.getTargetLoc() != null) {
+				            	if (c.equals(s.getTargetLoc())) {
+				            		s.targetReached();
+				            		Coordinate destination = s.getCircularNext(c);
+				            		s.moveTo(destination);
+				            		if (!c.equals(destination)) {
+				            			s.go(getTargetDirection(c, destination));
+				            		} else {
+				            			s.stay();
+				            		}
+				            	} else {
+				            		s.go(getTargetDirection(c, s.getTargetLoc()));
+				            	}
+			            	} else {
+			            		// this is unnecessary and could break; a better option is to go random
+			            		Coordinate destination = s.getCircularNext(c);
+			            		s.moveTo(destination);
+			            		if (!c.equals(destination)) {
+			            			s.go(getTargetDirection(c, destination));
+			            		} else {
+			            			s.stay();
+			            		}
+			            	} 
+			            
+			            } else if (this.seekerStrategy == Strategies.Strategy5) {
+			            	s.cuurCoordinate(c);
+			            	if (!s.hasReachedTarget() && s.getTargetLoc() != null) {
+				            	if (c.equals(s.getTargetLoc())) {
+				            		s.targetReached();
+				            		Coordinate destination = s.getCircularNextStrat5(c);
+				            		s.moveTo(destination);
+				            		if (!c.equals(destination)) {
+				            			s.go(getTargetDirection(c, destination));
+				            		} else {
+				            			s.stay();
+				            		}
+				            	} else {
+				            		s.go(getTargetDirection(c, s.getTargetLoc()));
+				            	}
+			            	} else {
+			            		// this is unnecessary and could break; a better option is to go random
+			            		Coordinate destination = s.getCircularNextStrat5(c);
+			            		s.moveTo(destination);
+			            		if (!c.equals(destination)) {
+			            			s.go(getTargetDirection(c, destination));
+			            		} else {
+			            			s.stay();
+			            		}
+			            	} 
+			            
 			            }
 		            }
 		            
@@ -566,7 +642,6 @@ public class SimulationV3 extends JPanel{
 	        	}
 	        }
 	    }
-	    
 	    
 	    private boolean inPath(int pX1, int pY1, int pX2, int pY2, int oX, int oY, int w) {
 	        int a = -1 * (pY2 -pY1);
@@ -808,6 +883,8 @@ public class SimulationV3 extends JPanel{
 	    } */
 
 	    private Directions getTargetDirection(Coordinate cur, Coordinate tar) {
+	    	
+	    	
 	    	LinkedList<Directions> l =  new LinkedList<Directions>();
 	    	
 	    	if (tar.getX() > cur.getX()) {
@@ -821,7 +898,7 @@ public class SimulationV3 extends JPanel{
 	    	} else if (tar.getY() < cur.getY()) {
 	    		l.add(Directions.N);
 	    	}
-	    	
+	    		    	
 	    	int randomNum = ThreadLocalRandom.current().nextInt(0, l.size());
 	    	return l.get(randomNum);
 	    }

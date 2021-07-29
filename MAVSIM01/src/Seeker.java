@@ -6,6 +6,10 @@ import java.util.LinkedList;
 import java.util.Random;
 
 public class Seeker extends Robot {
+	
+	public enum Phase {
+		Phase1, Phase2, Phase3, Phase4
+	}
     
     private Color color;
     private int id;
@@ -17,9 +21,14 @@ public class Seeker extends Robot {
     private HashMap<Integer, HashSet<Integer>> dataRecieved;
     
     private Task currTask;
+    private Phase currPhase;
     
+    
+    private CricularMotion moveC;
     
     private LinkedList<Integer> sendBuffer;
+    
+    private LinkedList<Integer> myCols;
     
     private boolean isSending;
     
@@ -38,9 +47,13 @@ public class Seeker extends Robot {
     
     private double sendProb;
     
+    private int pOneCounter;
+    
     private int succComm;
     
     private int dataID;
+    
+    private Coordinate currC;
     
     private int[][] coordinateTimeLog;
     
@@ -74,24 +87,46 @@ public class Seeker extends Robot {
         
         this.failurePeriod = 0;
         
+        this.pOneCounter = 0;
+        
+        this.currC = c;
+        
+        this.moveC = new CricularMotion(Phase.Phase1);
+        
         this.coordinateTimeLog = new int[SimulationV3.Y_MAX + 1][SimulationV3.X_MAX + 1];
         
         this.currTask = new Task();
         
-        getEarliest();
+        this.currPhase = Phase.Phase1;
+        
+        this.myCols = new LinkedList<Integer>();
+        
+        this.moveC.assignColsStrat5(SimSettings.NumPursuers, id);;
+        
+        this.myCols = this.moveC.getCols();
+        
     }
 
     @Override
     public void draw(Graphics g) {
         // TODO Auto-generated method stub
         g.setColor(this.color);
-        if (this.failurePeriod != 0) {
+        if (this.failurePeriod != 0 || this.currPhase == Phase.Phase2) {
         	g.setColor(Color.YELLOW);
         }
         
         g.fillOval(this.getPx(), this.getPy(), this.getWidth(), this.getHeight());  
     }
     
+    
+    public void cuurCoordinate(Coordinate c) {
+    	this.currC = c;
+    }
+    
+    public void changePhase(Phase p) {
+    	this.moveC.changePhase(p);
+    	this.currPhase = p;
+    }
     public void ObsNav(Directions d) {
         
         switch (d) {
@@ -158,6 +193,9 @@ public class Seeker extends Robot {
     		
     		if (s == Strategies.Strategy1) {
     			this.ds = new Data(this.coordinateTimeLog, dataID, id);
+    		} else if (s == Strategies.Strategy4) {
+    			this.dataID++;
+    			this.ds = new Data(this.myCols, this.currPhase, dataID, id);
     		}
     		
     		// this.ds = something
@@ -184,6 +222,10 @@ public class Seeker extends Robot {
     	return this.failurePeriod;
     }
     
+    
+    public Seeker.Phase getPhase() {
+    	return this.currPhase;
+    }
     public boolean sendStatus() {
     	return this.isSending;
     }
@@ -304,12 +346,51 @@ public class Seeker extends Robot {
         	        corMin = cList.get(rndmNumber);
     			}
     			moveTo(corMin); 
-    		} 
+    		} else if (s == Strategies.Strategy4) {
+    			
+    			if (this.currPhase == Phase.Phase1) {
+    				//doPhaseOne(this.d.getColList());
+    				
+    				
+    				
+    				if (currC.getY() == SimulationV3.Y_MAX - 1) {
+    					
+    					this.pOneCounter++;
+
+    				}
+    				
+    				if (this.pOneCounter > 5 || this.d.getPhase() == Seeker.Phase.Phase2) {
+    					this.currPhase = Phase.Phase2;
+    					this.moveC.changePhase(Phase.Phase2);
+    				}
+    				
+    			} else if (this.d.getPhase() == Seeker.Phase.Phase3) {
+    				if (this.currPhase == Phase.Phase2) {
+    					this.currPhase = Phase.Phase3;
+    					this.moveC.changePhase(Phase.Phase3);
+    					
+    				}
+    			} else if (this.d.getPhase() == Seeker.Phase.Phase2) {
+    				if (this.currPhase == Phase.Phase3) {
+    					this.currPhase = Phase.Phase2;
+    					this.moveC.changePhase(Phase.Phase2);
+    					
+    				}
+    			}
+    		}
     	}
     	this.hasData = false;
     	this.d = null;
     }
     
+    
+    public Coordinate getCircularNext(Coordinate c) {
+    	return this.moveC.getNextCoordinate(c);
+    }
+    
+    public Coordinate getCircularNextStrat5(Coordinate c) {
+    	return this.moveC.getNextCoordinateStrat5(c);
+    }
     
     public void commSucc() {
     	this.succComm++;
@@ -329,6 +410,11 @@ public class Seeker extends Robot {
     	this.sendBuffer.addFirst(0);
     }
     
+    public Coordinate getTaskedCoordinate() {
+    	Coordinate c = this.currTask.getNextCoordinate();
+    	moveTo(c);
+    	return c;
+    }
     
     public Coordinate getEarliest() {
     	int min = Integer.MAX_VALUE;
@@ -455,6 +541,60 @@ public class Seeker extends Robot {
     public Coordinate getTaskLocation() {
     	
     	return null;
+    }
+    
+    private void doPhaseOne(LinkedList<Integer> colList) {
+    	LinkedList<Integer> toremove = new LinkedList<Integer>();
+    	if (this.myCols.size() == colList.size()) {
+    		if (this.myCols.getFirst() == colList.getFirst() && this.myCols.getLast() == colList.getLast()) {
+    			int l = this.myCols.size();
+    			
+    			if (Math.random() < 0.5) {
+	    			for (int i = l /2; i < l; i++) {
+	    				toremove.add(this.myCols.get(i));
+	    			}
+    			} else {
+	    			for (int i = 0; i < l / 2; i++) {
+	    				toremove.add(this.myCols.get(i));
+	    			}
+    			}
+    			
+    		}
+    	} else if (this.myCols.size() > colList.size()) {
+    		
+    		if (((2 * colList.size()) <= this.myCols.size() + 1)) {
+    		
+    			this.myCols.removeAll(colList);
+    		
+    		}
+
+    	} else if (this.myCols.size() < colList.size() - 1) {
+    		
+    		if (((2 * this.myCols.size()) < colList.size() - 1) || (!(colList.contains(myCols.getFirst())) && !(colList.contains(myCols.getLast())))) {
+				this.myCols.addAll(colList);
+	
+	    		if (this.myCols.getFirst() < colList.getFirst()) {
+	    			int l = this.myCols.size();
+	    			// remove the last half
+	    			for (int i = l /2; i < l; i++) {
+	    				toremove.add(this.myCols.get(i));
+	    			}
+	    		} else {
+	    			// remove the first half
+	    			int l = this.myCols.size();
+	    			for (int i = 0; i < l / 2; i++) {
+	    				toremove.add(this.myCols.get(i));
+	    			}
+	    		}
+    		}
+    		
+    	}
+    	this.dataID++;
+    	this.myCols.removeAll(toremove);
+
+    	moveC.setCols(this.myCols);
+    	
+    	moveTo(moveC.getNextCoordinate(currC));
     }
 
 	@Override

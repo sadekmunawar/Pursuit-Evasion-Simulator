@@ -14,6 +14,8 @@ public abstract class Robot {
     private int wd;
     private int ht;
     
+    boolean stay;
+    
     //boundary
     private Directions lastDir;
     
@@ -99,8 +101,12 @@ public abstract class Robot {
     }
     
     public void move() {
-        this.px += this.vx;
-        this.py += this.vy;
+    	if (!stay) {
+	        this.px += this.vx;
+	        this.py += this.vy;
+    	}
+    	
+    	stay = false;    	
 
         clip();
     }
@@ -122,6 +128,10 @@ public abstract class Robot {
             && thisNextY + this.ht >= thatNextY
             && thatNextX + that.wd >= thisNextX 
             && thatNextY + that.ht >= thisNextY);
+    }
+    
+    public void stay(){
+    	this.stay = true;
     }
     
     //Change direction

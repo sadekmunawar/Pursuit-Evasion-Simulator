@@ -108,21 +108,49 @@ public class RunSim implements Runnable {
             }
         });
         
+        JRadioButton seekerStr4 = new JRadioButton("Strategy 4");
+        seekerStr4.setToolTipText(" ");
+        seekerStr4.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	sim.setSeekerStrategy(Strategies.Strategy4);
+            }
+        });
+        
+        JRadioButton seekerStr5 = new JRadioButton("Strategy 5");
+        seekerStr5.setToolTipText(" ");
+        seekerStr5.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	sim.setSeekerStrategy(Strategies.Strategy5);
+            }
+        });
+        
+        JRadioButton seekerStr6 = new JRadioButton("Strategy 6");
+        seekerStr6.setToolTipText(" ");
+        seekerStr6.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+            	sim.setSeekerStrategy(Strategies.Strategy6);
+            }
+        });
+        
         ButtonGroup seekerAttr = new ButtonGroup();
         seekerAttr.add(seekerRandom);
         seekerAttr.add(seekerStr1);
         seekerAttr.add(seekerStr2);
         seekerAttr.add(seekerStr3);
+        seekerAttr.add(seekerStr4);
+        seekerAttr.add(seekerStr5);
+        seekerAttr.add(seekerStr6);
         
 
         set.add(seekerRandom);
         set.add(seekerStr1);
         set.add(seekerStr2);
+        set.add(seekerStr6);
         set.add(seekerStr3);
+        set.add(seekerStr4);
+        set.add(seekerStr5);
         
-        set.add(new JLabel("     "));
-        set.add(new JLabel("     "));
-        set.add(new JLabel("     "));
+        
         
         /*******************Evader Buttons **********************************/
         set.add(new JLabel("Evaders :"));
@@ -215,7 +243,7 @@ public class RunSim implements Runnable {
         });
         control_panel.add(start);
         
-    //    frame.add(sim, BorderLayout.CENTER);
+        //    frame.add(sim, BorderLayout.CENTER);
 
 
 

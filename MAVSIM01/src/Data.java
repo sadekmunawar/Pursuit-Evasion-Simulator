@@ -1,5 +1,6 @@
-import java.util.HashMap;
+import java.util.HashMap; 
 import java.util.LinkedList;
+
 
 public class Data {
 	public enum Types{
@@ -11,6 +12,11 @@ public class Data {
 	
 	private Types type;
 	private LinkedList<Coordinate> dList;
+	
+	private LinkedList<Integer> colList;
+	
+	private Seeker.Phase phase;
+	
 	private int[][] coordinateTimeLog;
 	
 	public Data(LinkedList<Coordinate> data, int id, int roboID) {
@@ -31,8 +37,24 @@ public class Data {
 		this.type = Types.CoordinateTimeArray;
 	}
 	
+	public Data(LinkedList<Integer> myCols, Seeker.Phase p, int id, int roboID) {
+		this.dataID = id;
+		this.roboID = roboID;
+		colList = new LinkedList<Integer>();
+		colList = myCols;
+		this.phase = p;
+	}
+	
 	public Types getDataType() {
 		return this.type;
+	}
+	
+	public LinkedList<Integer> getColList() {
+		return this.colList;
+	}
+	
+	public Seeker.Phase getPhase() {
+		return this.phase;
 	}
 	
 	public int[][] getCoordinateTimeArray() {
