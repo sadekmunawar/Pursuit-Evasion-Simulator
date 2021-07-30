@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Seeker extends Robot {
 	
@@ -18,17 +19,21 @@ public class Seeker extends Robot {
     private HashSet<Coordinate> explored = new HashSet<Coordinate>();
     private HashSet<Integer> targetFound = new HashSet<Integer>();
     
+    private HashMap<Integer, RobotRegionTime> roboTime;
+    
     private HashMap<Integer, HashSet<Integer>> dataRecieved;
     
     private Task currTask;
     private Phase currPhase;
-    
+        
     
     private CricularMotion moveC;
     
     private LinkedList<Integer> sendBuffer;
     
     private LinkedList<Integer> myCols;
+    
+    private PatrolRegion pr;
     
     private boolean isSending;
     
@@ -57,6 +62,8 @@ public class Seeker extends Robot {
     
     private int[][] coordinateTimeLog;
     
+    private int currTime;
+    
     
     private Data d;
     
@@ -75,6 +82,9 @@ public class Seeker extends Robot {
         
         this.sendProb = 0.5;
         
+        this.currTime = 0;
+        
+        
         this.dataRecieved = new HashMap<Integer, HashSet<Integer>>();
         
         this.sendBuffer = new LinkedList<Integer>();
@@ -91,6 +101,10 @@ public class Seeker extends Robot {
         
         this.currC = c;
         
+        this.roboTime = new HashMap<Integer, RobotRegionTime>();
+        
+        this.pr = new PatrolRegion(1,0);
+        
         this.moveC = new CricularMotion(Phase.Phase1);
         
         this.coordinateTimeLog = new int[SimulationV3.Y_MAX + 1][SimulationV3.X_MAX + 1];
@@ -104,6 +118,8 @@ public class Seeker extends Robot {
         this.moveC.assignColsStrat5(SimSettings.NumPursuers, id);;
         
         this.myCols = this.moveC.getCols();
+        
+        
         
     }
 
@@ -170,6 +186,7 @@ public class Seeker extends Robot {
             }
         }
     }
+
         
     public void sendInit(Strategies s) {
     	
@@ -196,8 +213,10 @@ public class Seeker extends Robot {
     		} else if (s == Strategies.Strategy4) {
     			this.dataID++;
     			this.ds = new Data(this.myCols, this.currPhase, dataID, id);
+    		} else if (s == Strategies.Strategy6) {
+    			this.dataID++;
+    			this.ds = new Data(this.roboTime, this.pr.getRegionID(), this.dataID, this.id);
     		}
-    		
     		// this.ds = something
     	} else {
     		this.isSending = false;
@@ -279,6 +298,10 @@ public class Seeker extends Robot {
     
     public void fillFilter() {
     	this.howBusy = 1.0;
+    }
+    
+    public void registerTime(int i) {
+    	this.currTime = i;
     }
     
     private boolean containsData(Data d) {
@@ -377,10 +400,80 @@ public class Seeker extends Robot {
     					
     				}
     			}
+    		} else if (s == Strategies.Strategy6) {
+    			int i = this.roboTime.size();
+    			int j = this.d.getRegionID();
+    			
+    			this.roboTime.put(this.d.getRoboID(), new RobotRegionTime(j, this.currTime));    			
+    			
+    			
+    			updateRoboTime(this.d.getRobotTime());  
+    			
+    			int r = this.pr.getRegionID();
+    			
+    			int[] regArr = new int[this.roboTime.size() + 1];
+    			
+    			int nr = 0;
+    			
+    			if (r != j) {
+    				nr = r;
+    			} else {
+    				for (Integer m: this.roboTime.keySet()) {
+    					regArr[this.roboTime.get(m).getRegionID()] = 1;
+    				}
+    				
+    				int c = 1;
+    				
+    				boolean regFound = false;
+    				
+    				while (((r + c) <= this.roboTime.size()) || ((r - c) >= 0)) {
+    					if ((r + c) <= this.roboTime.size()) {
+    						if (regArr[r + c] == 0) {
+    							nr = r + c;
+    							regFound = true;
+    							break;
+    						}
+    					} else if ((r - c) >= 0) {
+    						if (regArr[r - c] == 0) {
+    							nr = r + c;
+    							regFound = true;
+    							break;
+    						}
+    					}
+    					c++;
+    				}
+    				
+    				if (!regFound) {
+    					nr = ThreadLocalRandom.current().nextInt(0, this.roboTime.size() + 1);
+    				}
+    			}
+    			
+    			if (i < this.roboTime.size()) {
+    				this.pr.resetCoordinates(this.roboTime.size() + 1, nr);
+    			} else if (i < this.roboTime.size()) {
+    				
+    			}
+    			
     		}
     	}
     	this.hasData = false;
     	this.d = null;
+    }
+    
+    
+    private void updateRoboTime(HashMap<Integer, RobotRegionTime> h) {
+    	for(Integer i: h.keySet()) {
+    		if (this.roboTime.containsKey(i)) {
+    			if (this.roboTime.get(i).getTime() < h.get(i).getTime()) {
+    				this.roboTime.put(i, h.get(i));
+    			}
+    		} else {
+    			if (i != this.id) {
+    				this.roboTime.put(i, h.get(i));
+    			}
+    		}
+    		
+    	}
     }
     
     
@@ -402,6 +495,11 @@ public class Seeker extends Robot {
     			this.sendBuffer.removeLast();
     		}
     	}
+    }
+    
+    public Coordinate getNextCoordinateSt6(Coordinate c) {
+    	return this.pr.getNextCoordinate(c);
+    	
     }
     
     public void commJammed() {

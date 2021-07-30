@@ -263,10 +263,10 @@ public class SimulationV3 extends JPanel{
 	        
 	        for (int i = 0; i < numSeekers; i++) {
 		        Random nu = new Random();
-		        int snum = nu.nextInt(3); 
-		       int snum2 = nu.nextInt(2);
-		      //  int snum = nu.nextInt(8); // 3
-		      //  int snum2 = 6;//nu.nextInt(2);
+		      //  int snum = nu.nextInt(3); 
+		      // int snum2 = nu.nextInt(2);
+		        int snum = nu.nextInt(8); // 3
+		        int snum2 = 6;//nu.nextInt(2);
 		        
 		        this.seekers.add(new Seeker(new Coordinate (snum, snum2), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, i));
 		        
@@ -276,11 +276,11 @@ public class SimulationV3 extends JPanel{
 	        
 	        for (int i = 0; i < numEvaders; i++) {
 		        Random n = new Random();
-		       int num = n.nextInt(3) + 6;
-		        int num2 = n.nextInt(2);
+		      // int num = n.nextInt(3) + 6;
+		       // int num2 = n.nextInt(2);
 		        
-		     //   int num = n.nextInt(8); //n.nextInt(3) + 6;
-		    //    int num2 = 0;            //n.nextInt(2);
+		        int num = n.nextInt(8); //n.nextInt(3) + 6;
+		        int num2 = 0;            //n.nextInt(2);
 		        
 		        this.targets.add(new Targets(new Coordinate (num, num2), 1, 0, 5, 5, COURT_WIDTH, COURT_HEIGHT, 1));
 	        }
@@ -395,102 +395,75 @@ public class SimulationV3 extends JPanel{
 		            	
 			            if (this.seekerStrategy == Strategies.Random) {
 			            	s.go(getARandomDirection(c));
-			            } else if (this.seekerStrategy == Strategies.Strategy1) {
-			            	s.recordTimeAndCoordinate(c, this.time);
-			            	if (!s.hasReachedTarget() && s.getTargetLoc() != null) {
-				            	if (c.equals(s.getTargetLoc())) {
-				            		s.targetReached();
-				            		Coordinate destination = s.getEarliest();
-				            		s.go(getTargetDirection(c, destination));
-				            	} else {
-				            		s.go(getTargetDirection(c, s.getTargetLoc()));
-				            	}
-			            	} else {
-			            		// this is unnecessary and could break; a better option is to go random
-			            		//s.go(getTargetDirection(c, s.getTargetLoc()));
-			            		s.targetReached();
-			            		Coordinate destination = s.getEarliest();
-			            		s.go(getTargetDirection(c, destination));
-			            	} 
 			            } else if (this.seekerStrategy == Strategies.Strategy2) {
 			            	this.coordinateTimeLogGlobal[c.getY()][c.getX()] = this.time;
 			            	s.moveTo(getEarliest());
 			            	s.go(getTargetDirection(c, s.getTargetLoc()));
-			            } else if (this.seekerStrategy == Strategies.Strategy3) {
-			            	if (!s.hasReachedTarget() && s.getTargetLoc() != null) {
-			            		if (c.equals(s.getTargetLoc())) {
-				            		s.targetReached();
-				            		Coordinate destination = s.getTaskedCoordinate();
-				            		s.go(getTargetDirection(c, destination));
-			            			
-			            		} else {
-			            			s.go(getTargetDirection(c, s.getTargetLoc()));
-			            		}
-
-			            	} else {
-			            		s.go(getTargetDirection(c, s.getTaskedCoordinate()));
-			            	}
-			            //	s.moveTo(s.getTaskLocation);
-			            	s.go(getTargetDirection(c, s.getTargetLoc()));
-			            } else if (this.seekerStrategy == Strategies.Strategy4) {
+			            
+			            } else {
 			            	s.cuurCoordinate(c);
-			            	if (c.getY() == 0) {
-			            		s.changePhase(Seeker.Phase.Phase3);
-			            	}
-			            	 if (c.getY() == 5 && s.getPhase() == Seeker.Phase.Phase3) {
-			            		 s.changePhase(Seeker.Phase.Phase2);
-			            	 }
-			     
+			            	s.recordTimeAndCoordinate(c, this.time);
 			            	if (!s.hasReachedTarget() && s.getTargetLoc() != null) {
 				            	if (c.equals(s.getTargetLoc())) {
 				            		s.targetReached();
-				            		Coordinate destination = s.getCircularNext(c);
+				            		Coordinate destination = null;
+				            		if (this.seekerStrategy == Strategies.Strategy1) {
+				            			destination = s.getEarliest();
+				            		} else if (this.seekerStrategy == Strategies.Strategy3) {
+				            			destination = s.getTaskedCoordinate();
+				            		} else if (this.seekerStrategy == Strategies.Strategy4) {
+						            	if (c.getY() == 0) {
+						            		s.changePhase(Seeker.Phase.Phase3);
+						            	}
+						            	if (c.getY() == 5 && s.getPhase() == Seeker.Phase.Phase3) {
+						            		 s.changePhase(Seeker.Phase.Phase2);
+						            	}
+				            			destination = s.getCircularNext(c);
+				            		} else if (this.seekerStrategy == Strategies.Strategy5) {
+					            		destination = s.getCircularNextStrat5(c);
+				            		} else if (this.seekerStrategy == Strategies.Strategy6) {
+				            			destination = s.getNextCoordinateSt6(c);
+				            		}
+				            		
 				            		s.moveTo(destination);
 				            		if (!c.equals(destination)) {
 				            			s.go(getTargetDirection(c, destination));
 				            		} else {
 				            			s.stay();
 				            		}
+				            		
 				            	} else {
 				            		s.go(getTargetDirection(c, s.getTargetLoc()));
 				            	}
 			            	} else {
-			            		// this is unnecessary and could break; a better option is to go random
-			            		Coordinate destination = s.getCircularNext(c);
+			            		Coordinate destination = null;
+			            		
+			            		if (this.seekerStrategy == Strategies.Strategy1) {
+			            			destination = s.getEarliest();
+			            		} else if (this.seekerStrategy == Strategies.Strategy3) {
+			            			destination = s.getTaskedCoordinate();
+			            		} else if (this.seekerStrategy == Strategies.Strategy4) {
+					            	if (c.getY() == 0) {
+					            		s.changePhase(Seeker.Phase.Phase3);
+					            	}
+					            	if (c.getY() == 5 && s.getPhase() == Seeker.Phase.Phase3) {
+					            		 s.changePhase(Seeker.Phase.Phase2);
+					            	}
+			            			destination = s.getCircularNext(c);
+			            		} else if (this.seekerStrategy == Strategies.Strategy5) {
+				            		destination = s.getCircularNextStrat5(c);
+			            		} else if (this.seekerStrategy == Strategies.Strategy6) {
+			            			destination = s.getNextCoordinateSt6(c);
+			            		}
+			            		
 			            		s.moveTo(destination);
 			            		if (!c.equals(destination)) {
 			            			s.go(getTargetDirection(c, destination));
 			            		} else {
 			            			s.stay();
 			            		}
-			            	} 
-			            
-			            } else if (this.seekerStrategy == Strategies.Strategy5) {
-			            	s.cuurCoordinate(c);
-			            	if (!s.hasReachedTarget() && s.getTargetLoc() != null) {
-				            	if (c.equals(s.getTargetLoc())) {
-				            		s.targetReached();
-				            		Coordinate destination = s.getCircularNextStrat5(c);
-				            		s.moveTo(destination);
-				            		if (!c.equals(destination)) {
-				            			s.go(getTargetDirection(c, destination));
-				            		} else {
-				            			s.stay();
-				            		}
-				            	} else {
-				            		s.go(getTargetDirection(c, s.getTargetLoc()));
-				            	}
-			            	} else {
-			            		// this is unnecessary and could break; a better option is to go random
-			            		Coordinate destination = s.getCircularNextStrat5(c);
-			            		s.moveTo(destination);
-			            		if (!c.equals(destination)) {
-			            			s.go(getTargetDirection(c, destination));
-			            		} else {
-			            			s.stay();
-			            		}
-			            	} 
-			            
+			            		
+			            	}
 			            }
 		            }
 		            
@@ -624,6 +597,7 @@ public class SimulationV3 extends JPanel{
 	 	                        			r.setPartnerID(-1);
 	 	                        			interf = true;
 	 	                        		} else {
+	 	                        			r.registerTime(this.time);
 	 	                        			this.comSucc++;
 	 	                        			r.setPartnerID(u.getID());
 	 	                        			r.commSucc();

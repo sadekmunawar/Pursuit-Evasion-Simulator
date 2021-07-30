@@ -145,10 +145,10 @@ public class RunSim implements Runnable {
         set.add(seekerRandom);
         set.add(seekerStr1);
         set.add(seekerStr2);
-        set.add(seekerStr6);
         set.add(seekerStr3);
         set.add(seekerStr4);
         set.add(seekerStr5);
+        set.add(seekerStr6);
         
         
         

@@ -11,5 +11,5 @@ public class SimSettings  {
 	
 	
 	public static final int NumEvaders = 5;
-	public static final int NumPursuers = 7;
+	public static final int NumPursuers = 2;
 }

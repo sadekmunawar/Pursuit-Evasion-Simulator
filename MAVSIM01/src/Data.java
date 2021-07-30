@@ -1,4 +1,5 @@
-import java.util.HashMap; 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 
@@ -9,6 +10,12 @@ public class Data {
 	
 	private int dataID;
 	private int roboID;
+	
+	private int regionID;
+	
+	
+	private HashMap<Integer, RobotRegionTime> robotTime;
+	
 	
 	private Types type;
 	private LinkedList<Coordinate> dList;
@@ -45,6 +52,22 @@ public class Data {
 		this.phase = p;
 	}
 	
+	public Data(HashMap<Integer, RobotRegionTime> roboTime, int regionID, int dataID, int robotID) {
+		this.dataID = dataID;
+		this.roboID = robotID;
+		this.regionID = regionID;
+		this.robotTime = roboTime;
+	}
+
+	public int getRegionID() {
+		return regionID;
+	}
+
+	public HashMap<Integer, RobotRegionTime> getRobotTime() {
+		return robotTime;
+	}
+
+
 	public Types getDataType() {
 		return this.type;
 	}
