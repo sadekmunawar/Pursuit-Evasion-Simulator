@@ -204,7 +204,7 @@ public class Seeker extends Robot {
     		sendP = 1.0 - this.howBusy;
     	}
  
-    	if (Math.random() < sendP) {
+    	if (Math.random() < 0.40) {
     		this.isSending = true;
     		this.howBusy = this.howBusy + this.alpha;
     		
@@ -452,6 +452,8 @@ public class Seeker extends Robot {
     				this.pr.resetCoordinates(this.roboTime.size() + 1, nr);
     			} else if (i < this.roboTime.size()) {
     				
+    			} else {
+    				this.pr.resetCoordinates(this.roboTime.size() + 1, nr);
     			}
     			
     		}

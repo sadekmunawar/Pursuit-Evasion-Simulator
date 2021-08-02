@@ -72,12 +72,12 @@ public class PatrolRegion {
 		
 		int y = 0;
 		
-		if (rID % 3 == 0) {
-			y = SimulationV3.Y_MAX - 1;
-		} else if (rID % 3 == 1) {
-			y = SimulationV3.Y_MAX - 2;
-		} else {
+		if (rID % 4 == 0) {
 			y = SimulationV3.Y_MAX;
+		} else if (rID % 4 == 1 || (rID % 4 == 3)) {
+			y = SimulationV3.Y_MAX - 1;
+		} else {
+			y = SimulationV3.Y_MAX - 2;
 		}
 		this.regionCoordinates = new LinkedList<Coordinate>();
 		
@@ -108,11 +108,13 @@ public class PatrolRegion {
 					this.regionCoordinates.add(new Coordinate(4,y));
 					break;
 				case 3:
+					this.regionCoordinates.add(new Coordinate(3,y));
 					this.regionCoordinates.add(new Coordinate(4,y));
 					this.regionCoordinates.add(new Coordinate(5,y));
 					this.regionCoordinates.add(new Coordinate(6,y));
 					break;
 				case 4:
+					this.regionCoordinates.add(new Coordinate(5,y));
 					this.regionCoordinates.add(new Coordinate(6,y));
 					this.regionCoordinates.add(new Coordinate(7,y));
 					this.regionCoordinates.add(new Coordinate(8,y));
@@ -140,6 +142,14 @@ public class PatrolRegion {
 					this.regionCoordinates.add(new Coordinate(i, y));
 				}
 			}
+		}
+		
+		if (this.regionCoordinates.size() <= 2) {
+			int last = this.regionCoordinates.getLast().getX();
+			if (last < SimulationV3.X_MAX) {
+				this.regionCoordinates.add(new Coordinate(last + 1, y));
+			}
+			
 		}
 	}
 }

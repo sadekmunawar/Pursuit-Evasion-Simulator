@@ -35,9 +35,9 @@ public class RunSim implements Runnable {
         JPanel set = new JPanel();
         set.setLayout(new GridLayout(5, 4));
         
-        /*******************THE SETTINGS PANEL **********************************/
+        /*******************THE SETTINGS PANEL**********************************/
         
-        //The grid
+        // The grid
         JLabel grid = new JLabel("The Grid :");
         
         JRadioButton fullGrid = new JRadioButton("Full");
@@ -55,7 +55,6 @@ public class RunSim implements Runnable {
             	sim.addRoads();
             }
         });
-        
         
         
         ButtonGroup gridGroup = new ButtonGroup();

@@ -9,7 +9,6 @@ public class SimSettings  {
 	public static final String FilePath = "zig_zag/zig_zag_side_spawn_7p.csv";
 	
 	
-	
 	public static final int NumEvaders = 5;
-	public static final int NumPursuers = 2;
+	public static final int NumPursuers = 5;
 }

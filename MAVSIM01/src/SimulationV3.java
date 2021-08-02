@@ -1,4 +1,4 @@
-	import java.awt.Color; 
+	import java.awt.Color;  
 	import java.awt.Dimension;
 	import java.awt.Graphics;
 	import java.awt.event.ActionEvent;
@@ -22,7 +22,7 @@
 	import com.opencsv.CSVWriter;
 	
 @SuppressWarnings("serial")
-public class SimulationV3 extends JPanel{
+public class SimulationV3 extends JPanel {
 
 	    
 	    private JLabel status; // Current status text
@@ -224,6 +224,8 @@ public class SimulationV3 extends JPanel{
 	    	this.absoluteFailure = 0;
 	    	this.timedFailure = 0;
 	    	
+	    	this.seekerAdded = false;
+	    	
 	    	this.infailure = new LinkedList<Seeker>();
 	    	
 	    	this.coordinateTimeLogGlobal = new int[Y_MAX+1][X_MAX+1];
@@ -288,9 +290,25 @@ public class SimulationV3 extends JPanel{
 	        this.totalEvaders = this.targets.size();
 	    }
 	    
+	    private boolean seekerAdded = false;
+	    
+	    private void addSeeker() {
+	    	if (this.time >= 4000 && !seekerAdded) {
+		        Random nu = new Random();
+
+	    		int snum = nu.nextInt(8); // 3
+		        int snum2 = 6;//nu.nextInt(2);
+		        
+		        this.seekers.add(new Seeker(new Coordinate (snum, snum2), 0, 1, 5, 5, COURT_WIDTH, COURT_HEIGHT, Color.BLACK, 5));
+
+	    		seekerAdded = true;
+	    	}
+	    }
 	    
 	    public void tick() {
 	        if (!simDone) {
+	        	
+	        	addSeeker();
 	        	
 		        if (failure) {
 			        	
